@@ -1,0 +1,261 @@
+# Real-form signup E2E with a mail-catcher (#288, item 3).
+#
+# The #287 disaster: the deployed product was unusable — email confirmation broke
+# — while every test stayed green, because tests minted users via
+# admin.createUser (bypassing the form + mailer). This job exercises the REAL
+# human path end-to-end against a LOCAL, ephemeral Supabase stack whose GoTrue
+# sends real confirmation emails into Mailpit (supabase-mail):
+#
+#   real /sign-up form → real confirmation email in Mailpit → click the link →
+#   session established → authenticated.
+#
+# The cloud shared Supabase can't be used here (Resend is send-only, no readable
+# inbox). Modeled on conformance.yml (local-stack bringup) + e2e.yml (root build /
+# serve / Playwright). Like conformance.yml it does NOT need the repo-wide
+# e2e-supabase mutex — the stack is per-runner ephemeral.
+#
+# Creds are the well-known PUBLIC Supabase demo keys (.env.local-supabase) — LOCAL.
+
+name: Signup Mailer E2E
+
+# NO TRIGGER `paths:` FILTER, DELIBERATELY (#870, pattern from #869).
+#
+# A `paths:` filter means this reports NOTHING on an unrelated PR — and a required check
+# that never reports is PENDING FOREVER, not skipped, so it could never be required.
+# This suite is the only coverage of a REAL form signup against a real mailbox (#288);
+# it going red without blocking anything is exactly the #572 defect.
+#
+# The `changes` job below gates the 25-minute run on the same paths the filter named, so
+# an unrelated PR costs one trivial job rather than a full local stack. Pinned by
+# scripts/__tests__/signup-mailer-requirable.test.js.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Per-ref only — each run owns an isolated local stack (no shared backend).
+  group: signup-mailer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Does this change need the signup mailer suite?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Decide
+        id: decide
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "  ${{ github.event_name }} — running unconditionally"
+            exit 0
+          fi
+          node scripts/ci/signup-mailer-changes.mjs \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}"
+
+  signup-mailer:
+    name: Real-form signup + email confirmation (local Mailpit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Local demo env (compose + test share the same public demo creds)
+        run: |
+          # Satisfy compose's `.env` from the committed LOCAL-demo template.
+          cp .env.local-supabase .env
+          sed -i 's|host\.docker\.internal|localhost|g' .env
+          # Authoritative env for the build + test process (win over the copied
+          # .env; dotenv.config() does not override existing process.env).
+          grep -E '^(NEXT_PUBLIC_SUPABASE_ANON_KEY|SUPABASE_SERVICE_ROLE_KEY)=' .env.local-supabase >> "$GITHUB_ENV"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321"
+            # Admin client (cleanup) runs on the runner → reach the published port.
+            echo "SUPABASE_ADMIN_URL=http://localhost:54321"
+            echo "MAILPIT_URL=http://localhost:54324"
+          } >> "$GITHUB_ENV"
+
+      - name: Bring up local Supabase + Mailpit (confirmation emails ON)
+        env:
+          # Flip off auto-confirm so GoTrue emits a REAL confirmation email into
+          # Mailpit (the whole point). Default stays 'true' for normal dev.
+          GOTRUE_MAILER_AUTOCONFIRM: 'false'
+          # Published Cloudflare test keys: the visible widget always passes,
+          # and GoTrue validates its dummy token with the matching test secret.
+          # These are public testing values, not production credentials.
+          GOTRUE_SECURITY_CAPTCHA_ENABLED: 'true'
+          GOTRUE_SECURITY_CAPTCHA_PROVIDER: turnstile
+          GOTRUE_SECURITY_CAPTCHA_SECRET: 1x0000000000000000000000000000000AA
+        run: |
+          docker compose --profile supabase up -d --build \
+            supabase-db supabase-kong supabase-auth supabase-rest supabase-mail
+
+      - name: Wait for Postgres, Kong+Auth+REST, and Mailpit
+        run: |
+          set +e
+          ANON="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+          for i in $(seq 1 60); do
+            db=$(docker compose exec -T supabase-db pg_isready -U postgres -d postgres >/dev/null 2>&1 && echo ok || echo no)
+            rest=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 -H "apikey: $ANON" http://localhost:54321/rest/v1/ 2>/dev/null)
+            auth=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 -H "apikey: $ANON" http://localhost:54321/auth/v1/health 2>/dev/null)
+            mail=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://localhost:54324/api/v1/info 2>/dev/null)
+            echo "try $i: db=$db rest=$rest auth=$auth mailpit=$mail"
+            if [ "$db" = ok ] && [ "$rest" = 200 ] && [ "$auth" = 200 ] && [ "$mail" = 200 ]; then
+              echo "stack ready"; break
+            fi
+            if [ "$i" = 60 ]; then
+              echo "::error::stack did not become ready within ~5 min"
+              docker compose logs --tail=80 supabase-db supabase-auth supabase-rest supabase-kong supabase-mail
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.16.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate project configuration
+        run: node scripts/detect-project.js
+
+      - name: Build the app (root-anchored, pointed at local Supabase)
+        run: pnpm build
+        env:
+          # Served from ROOT (`serve out -l 3000`), so build without a basePath.
+          DISABLE_BASE_PATH: 'true'
+          # NEXT_PUBLIC_SUPABASE_URL / ANON_KEY are inlined at build time — they
+          # come from $GITHUB_ENV (local stack + demo anon key) set above.
+          # Match GoTrue's test secret above so the real widget/form flow works
+          # without exposing real CAPTCHA credentials or sending real mail.
+          NEXT_PUBLIC_CAPTCHA_SITE_KEY: 1x00000000000000000000AA
+
+      # No install step (#829): the browsers ship in the image.
+
+      - name: Serve the static build
+        run: |
+          npx serve out -l 3000 > serve.log 2>&1 &
+          npx wait-on http://localhost:3000 -t 60000
+
+      - name: Run the local-Supabase E2E (signup-mailer + captcha-blocked)
+        env:
+          SKIP_WEBSERVER: true
+          BASE_URL: http://localhost:3000
+          # The captcha-blocked specs (#353) derive their generated addresses
+          # from this. No user needs to EXIST at it — brute-force.spec.ts seeds
+          # its own victim through the admin API and deletes it after (#1245) —
+          # but the sign-up helpers reject a blank value or @example.com, and
+          # the gmail branch keeps the generated addresses plus-routed.
+          # Auth mail stays in local Mailpit; only Cloudflare's published test
+          # keys are used for Turnstile verification, so no real mail or CAPTCHA
+          # credentials leave the runner (#361).
+          TEST_USER_PRIMARY_EMAIL: scripthammer.e2e+local@gmail.com
+          TEST_USER_PRIMARY_PASSWORD: LocalStackTestPassword123!
+          NEXT_PUBLIC_CAPTCHA_SITE_KEY: 1x00000000000000000000AA
+          E2E_LOCAL_TURNSTILE_TESTS: 'true'
+        run: scripts/ci/playwright-in-container.sh test --config playwright.signup-mailer.config.ts
+
+      # ZERO SKIPS, and at least one test executed (#1387). A skipped test reports green, and
+      # this lane carries the eight `@local-captcha` tests the hosted lane cannot run: if one
+      # starts skipping here (a guard that fires, a missing key), nothing runs it ANYWHERE
+      # and every check stays green. Same results.json walk as the per-shard gate in
+      # e2e-local.yml. Runs only when the step above passed; a failure there already fails
+      # the job, and `Signup Mailer result` reads this job's result, so this turns it red.
+      - name: No test in this lane may skip, and at least one must have run
+        run: |
+          python3 - test-results/signup-mailer-results.json <<'EOF'
+          import json, sys
+          try:
+              d = json.load(open(sys.argv[1]))
+          except Exception as e:
+              print(f"::error::no readable results file ({e}) - this lane reported nothing")
+              sys.exit(1)
+          ran = skipped = 0
+          names = []
+          def walk(s):
+              global ran, skipped
+              for spec in s.get("specs", []):
+                  for t in spec.get("tests", []):
+                      if t.get("status") == "skipped":
+                          skipped += 1
+                          names.append(spec.get("title", "?"))
+                      else:
+                          ran += 1
+              for c in s.get("suites", []): walk(c)
+          for s_ in d.get("suites", []): walk(s_)
+          print(f"executed {ran}, skipped {skipped}")
+          if ran == 0:
+              print("::error::this lane executed 0 tests - a green tick here would be meaningless")
+              sys.exit(1)
+          if skipped:
+              for n in names[:20]:
+                  print(f"::error::skipped: {n}")
+              print(f"::error::{skipped} test(s) skipped - a skip is not a pass; these tests exist to run here")
+              sys.exit(1)
+          EOF
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo '--- serve.log ---'; tail -40 serve.log 2>/dev/null || true
+          echo '--- mailpit messages ---'; curl -s http://localhost:54324/api/v1/messages | head -c 2000 || true
+          echo; echo '--- stack logs ---'
+          docker compose logs --tail=120 supabase-db supabase-auth supabase-rest supabase-kong supabase-mail
+
+      - name: Tear down
+        if: always()
+        run: docker compose --profile supabase down -v
+
+  # The always-reporting aggregate. THIS is the context to require, not `signup-mailer`.
+  result:
+    name: Signup Mailer result
+    runs-on: ubuntu-latest
+    # Cap: aggregate only; observed max 0.1 min. Uncapped, a hung job runs to the 360-minute default (#1119).
+    timeout-minutes: 5
+    needs: [changes, signup-mailer]
+    if: always()
+    steps:
+      - name: Verdict
+        run: |
+          set -euo pipefail
+          RAN="${{ needs.changes.outputs.run }}"
+          RESULT="${{ needs.signup-mailer.result }}"
+          echo "  changes.run=$RAN  signup-mailer.result=$RESULT"
+
+          if [ "$RAN" != "true" ]; then
+            echo "  no signup-relevant paths changed — suite skipped, reporting green"
+            exit 0
+          fi
+
+          # A cancelled run observed nothing. This suite is cancel-in-progress on its own
+          # ref, so a rapid second push cancels the first — and calling that green would
+          # mean a fast-follow push silently drops the only real-signup coverage there is.
+          case "$RESULT" in
+            success) echo "  real-form signup + email confirmation passed"; exit 0 ;;
+            *) echo "  signup mailer did not pass (result=$RESULT)"; exit 1 ;;
+          esac

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hồ sơ · Append-only CRUD</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main>
+    <header><div class="eyebrow">HỒ SƠ / LỊCH SỬ PHIÊN BẢN</div><h1>Quản lý hồ sơ</h1><p>Thêm, xem, sửa và xóa. Mọi thay đổi được lưu thành một phiên bản mới.</p><a class="flow-link" href="/data-flow">Xem luồng MQ → 2 consumer → Read DB + Email →</a></header>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <div class="workspace">
+      <section class="card form-card" aria-labelledby="form-title">
+        <div class="section-top"><h2 id="form-title">Thêm hồ sơ</h2><span class="badge" id="version">Mới</span></div>
+        <form id="person-form">
+          <label for="full-name">Họ và tên</label>
+          <input id="full-name" name="fullName" autocomplete="name" required maxlength="150" placeholder="Nguyễn Minh Anh">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="ban@example.com">
+          <label for="dob">Ngày sinh</label>
+          <input id="dob" name="dob" type="date" min="1900-01-01" required>
+          <label for="age">Tuổi <span class="muted">· tính theo ngày sinh</span></label>
+          <input id="age" readonly placeholder="—">
+          <div class="actions"><button id="save" type="submit">Lưu hồ sơ</button><button id="cancel" type="button" class="secondary" hidden>Hủy sửa</button></div>
+        </form>
+        <p class="hint">Sửa tạo phiên bản mới. Xóa thêm dấu xóa; lịch sử vẫn được giữ trong database.</p>
+      </section>
+      <section class="card list-card" aria-labelledby="list-title">
+        <div class="section-top"><div><h2 id="list-title">Danh sách hồ sơ</h2><span class="muted" id="count">Đang tải…</span><div class="muted">Nguồn đọc: MariaDB · Read DB</div></div><button type="button" id="refresh" class="secondary">Tải lại</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Họ và tên</th><th>Email</th><th>Ngày sinh</th><th>Tuổi</th><th>Thao tác</th></tr></thead><tbody id="people"></tbody></table></div>
+        <p id="empty" class="empty" hidden>Chưa có hồ sơ. Thêm người đầu tiên bằng form bên cạnh.</p>
+      </section>
+    </div>
+    <section id="history-panel" class="card history-card" hidden aria-labelledby="history-title"><div class="section-top"><h2 id="history-title">Lịch sử</h2><button class="secondary" id="close-history" type="button">Đóng</button></div><div id="history"></div></section>
+    <footer>Mỗi thay đổi được ghi thành phiên bản mới. Lịch sử hồ sơ được giữ lại.</footer>
+  </main>
+</body>
+</html>

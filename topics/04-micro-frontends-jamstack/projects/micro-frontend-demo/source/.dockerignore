@@ -1,0 +1,11 @@
+.git
+.agents
+.codex
+.aws
+**/node_modules
+**/dist
+**/build
+.yarn
+.turbo
+**/.env*
+**/*debug.log*

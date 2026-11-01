@@ -1,0 +1,28 @@
+
+> test:api
+> node --import tsx tests/api.test.ts
+
+▶ API integration
+  ✔ A01 seed và contract (69.614185ms)
+  ✔ A02 create/get/patch product (44.573937ms)
+  ✔ A03 validation product (33.480583ms)
+  ✔ A03b PATCH giữ các trường không gửi (41.143109ms)
+  ✔ A04 tạo đơn dùng giá server (24.508558ms)
+  ✔ A05 snapshot sau sửa giá/tên (15.626104ms)
+  ✔ A06 replay và A07 conflict (13.636325ms)
+  ✔ A08 concurrent replay không trùng đơn (48.115084ms)
+  ✔ A09 absent/inactive không tạo đơn (53.886521ms)
+  ✔ A10 input sai/malformed/oversized (32.460565ms)
+  ✔ A11 pagination et 404 (14.630862ms)
+  ✔ A12 routes internes inaccessibles (4.846202ms)
+  ✔ A13 propagation request ID (5.110565ms)
+  ✔ A14 không nhận giá client (5.449052ms)
+✔ API integration (425.69382ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 430.633057

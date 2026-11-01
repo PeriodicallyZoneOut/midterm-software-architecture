@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    participant B as React / Checkout
+    participant L as localStorage
+    participant N as Nginx
+    participant G as Gateway
+    participant O as Orders
+    participant D as Orders DB
+    Note over O,D: Lần đầu đã COMMIT đơn thành công theo UC05
+    O-->>G: 201 Order
+    G-->>N: 201 Order
+    N--xB: Phản hồi bị mất trước khi browser nhận
+    Note over B,L: Giỏ và mini-pending vẫn còn vì chưa xác nhận thành công
+    B->>L: Reload / thử lại, đọc body và key cũ
+    L-->>B: Cùng payload, cùng Idempotency-Key
+    B->>N: POST /api/orders với key cũ
+    N->>G: Chuyển request
+    G->>O: POST /orders
+    O->>O: Chuẩn hóa input, tính hash
+    O->>D: SELECT id,request_hash WHERE key=?
+    D-->>O: Đơn đã tạo và hash cũ
+    alt Hash trùng
+      O->>D: SELECT orders và order_items theo ID cũ
+      D-->>O: Snapshot đơn cũ
+      O-->>G: 200 cùng Order ID
+      G-->>N: 200
+      N-->>B: Nhận đơn cũ, xóa pending và giỏ
+    else Cùng key nhưng hash khác
+      O-->>G: 409 IDEMPOTENCY_CONFLICT
+      G-->>N: 409
+      N-->>B: Hiển thị xung đột
+    end
+    Note over O,D: Không resolve Products và không INSERT đơn mới khi replay

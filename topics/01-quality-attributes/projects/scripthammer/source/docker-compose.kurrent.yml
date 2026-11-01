@@ -1,0 +1,51 @@
+# Standalone evaluation stack. Does not change the existing dev/Supabase stack.
+# KurrentDB is running here, but the app still needs an API adapter to use it.
+name: scripthammer-kurrent
+
+services:
+  kurrentdb:
+    # Verified server version: 26.1.1. Pin the tested image rather than a moving tag.
+    image: docker.kurrent.io/kurrent-latest/kurrentdb:latest@sha256:e5c9d59716174a4a47f9d54d6ce45aaaca48114b7ee668135aeb9f16934d74c8
+    environment:
+      KURRENTDB_CLUSTER_SIZE: '1'
+      KURRENTDB_INSECURE: 'true'
+      KURRENTDB_RUN_PROJECTIONS: All
+      KURRENTDB_START_STANDARD_PROJECTIONS: 'true'
+      KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP: 'true'
+    ports:
+      - '127.0.0.1:${KURRENTDB_PORT:-2113}:2113'
+    volumes:
+      - kurrent_data:/var/lib/kurrentdb
+      - kurrent_logs:/var/log/kurrentdb
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'curl',
+          '--fail',
+          '--silent',
+          'http://localhost:2113/health/live',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  web:
+    image: scripthammer-web:kurrent-evaluation
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_SITE_URL: ${KURRENT_APP_ORIGIN:-http://localhost:8080}
+        NEXT_PUBLIC_DEPLOY_URL: ${KURRENT_APP_ORIGIN:-http://localhost:8080}
+    ports:
+      - '127.0.0.1:${KURRENT_APP_PORT:-8080}:8080'
+    restart: unless-stopped
+
+volumes:
+  kurrent_data:
+  kurrent_logs:

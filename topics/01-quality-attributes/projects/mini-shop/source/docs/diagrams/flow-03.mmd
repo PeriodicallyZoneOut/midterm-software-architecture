@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor A as Người quản trị demo
+    participant B as React / Admin
+    participant N as Nginx
+    participant G as Gateway
+    participant P as Products
+    participant D as Products DB
+    A->>B: Nhập tên, mô tả, giá, trạng thái
+    B->>N: POST /api/products, JSON form
+    N->>G: Chuyển request
+    G->>P: POST /products
+    P->>P: Validate createInput, tạo UUID
+    alt Dữ liệu không hợp lệ
+      P-->>G: 400 VALIDATION_ERROR
+      G-->>N: 400 JSON
+      N-->>B: Thông báo lỗi, không ghi DB
+    else Dữ liệu hợp lệ
+      P->>D: INSERT INTO products
+      D-->>P: Ghi thành công
+      P->>D: SELECT sản phẩm theo UUID mới
+      D-->>P: Bản ghi sản phẩm
+      P-->>G: 201 Product
+      G-->>N: 201 Product
+      N-->>B: Đã lưu sản phẩm
+      B->>N: GET /api/products để tải lại danh mục
+      Note over N,D: Lặp lại luồng đọc danh sách ở UC01
+    end

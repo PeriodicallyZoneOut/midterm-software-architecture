@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    participant C as Client qua Nginx và Gateway
+    participant A as Orders / request A
+    participant B as Orders / request B
+    participant D as Orders DB
+    participant P as Products API
+    C->>A: POST /orders, key K
+    C->>B: POST /orders, key K
+    A->>D: Tìm key K
+    D-->>A: Chưa có
+    B->>D: Tìm key K
+    D-->>B: Chưa có
+    A->>P: Resolve sản phẩm
+    P-->>A: Giá hiện tại
+    B->>P: Resolve sản phẩm
+    P-->>B: Giá hiện tại
+    A->>D: BEGIN, INSERT orders với key K
+    B->>D: BEGIN, INSERT orders với key K
+    Note over B,D: UNIQUE key khiến request B chờ transaction A
+    A->>D: INSERT items rồi COMMIT
+    D-->>B: ER_DUP_ENTRY sau khi A commit
+    B->>D: ROLLBACK, release connection
+    B->>D: Tìm lại key K và so hash
+    D-->>B: Đơn A đã commit
+    A-->>C: 201 Order mới
+    alt Cùng hash
+      B->>D: Đọc header và items của đơn A
+      D-->>B: Order snapshot
+      B-->>C: 200 cùng Order ID
+    else Hash khác
+      B-->>C: 409 IDEMPOTENCY_CONFLICT
+    end

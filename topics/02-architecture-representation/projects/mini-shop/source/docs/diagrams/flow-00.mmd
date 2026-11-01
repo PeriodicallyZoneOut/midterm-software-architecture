@@ -1,0 +1,23 @@
+flowchart TB
+    U[Người dùng] --> B[React trong trình duyệt]
+    B <-->|Giỏ hàng và pending request| LS[(localStorage)]
+    B -->|HTTP localhost:8080| N[Nginx / frontend container :80]
+    N -->|HTML, CSS, JavaScript| B
+    subgraph BACK[Docker network: backend]
+      N -->|/api/*| G[API Gateway :3000]
+      G -->|/products và /products/:id| P[Products Service :3001]
+      G -->|/orders và /orders/:id| O[Orders Service :3002]
+      O -->|POST /internal/products/resolve, timeout 3s| P
+    end
+    subgraph PD[Docker network: products-data]
+      P -->|SQL bằng products_app| PDB[(MariaDB Products :3306 / bảng products)]
+      PDB --- PV[Volume products-data]
+    end
+    subgraph OD[Docker network: orders-data]
+      O -->|SQL bằng orders_app| ODB[(MariaDB Orders :3306 / orders + order_items)]
+      ODB --- OV[Volume orders-data]
+    end
+    classDef data fill:#e5f1e7,stroke:#44845a,color:#183d25;
+    classDef service fill:#e9efff,stroke:#5677b3,color:#1d3154;
+    class PDB,ODB,LS data;
+    class G,P,O service;

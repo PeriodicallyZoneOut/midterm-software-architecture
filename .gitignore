@@ -1,0 +1,25 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+.secrets/
+.aws/
+*.pem
+*.key
+# Dependencies / build output / runtime data
+node_modules/
+.next/
+dist/
+coverage/
+playwright-report/
+test-results/
+.mariadb/
+*.pid
+*.sock
+*.log
+.DS_Store
+
+# Copied local cluster runtime and access configuration
+.local-demo/runtime/
+.local-demo/kubeconfig

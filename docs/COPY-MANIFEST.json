@@ -1,0 +1,65 @@
+{
+  "copied_at": "2026-11-01T14:55:55.003661+00:00",
+  "copies": [
+    {
+      "source": "lab-01/microservices-project-demo",
+      "destination": "topics/01-quality-attributes/projects/mini-shop/source",
+      "git_metadata_copied": false,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "week-03/microservices-demo",
+      "destination": "topics/01-quality-attributes/projects/online-boutique/source",
+      "git_metadata_copied": true,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "week-03/ScriptHammer",
+      "destination": "topics/01-quality-attributes/projects/scripthammer/source",
+      "git_metadata_copied": true,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "lab-01/microservices-project-demo",
+      "destination": "topics/02-architecture-representation/projects/mini-shop/source",
+      "git_metadata_copied": false,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "week-03/istio",
+      "destination": "topics/03-microservices-infrastructure/projects/istio/source",
+      "git_metadata_copied": true,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "week-03/microservices-demo",
+      "destination": "topics/03-microservices-infrastructure/projects/online-boutique/source",
+      "git_metadata_copied": true,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "week-03/jamstack/blog-starter-app",
+      "destination": "topics/04-micro-frontends-jamstack/projects/blog-starter/source",
+      "git_metadata_copied": true,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "micro-frontend/micro-frontend-demo",
+      "destination": "topics/04-micro-frontends-jamstack/projects/micro-frontend-demo/source",
+      "git_metadata_copied": true,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "week-03/new-app-auth-info",
+      "destination": "topics/05-event-sourcing-cqrs/projects/people-profiles/source",
+      "git_metadata_copied": false,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    },
+    {
+      "source": "week-03/new-app-auth-info",
+      "destination": "topics/06-event-driven-architecture/projects/people-profiles/source",
+      "git_metadata_copied": false,
+      "verification": "rsync checksum dry-run: no source differences; protected runtime copied separately with successful privileged cp"
+    }
+  ]
+}

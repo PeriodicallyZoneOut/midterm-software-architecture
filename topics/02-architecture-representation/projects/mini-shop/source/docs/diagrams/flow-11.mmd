@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    participant B as React qua Nginx
+    participant G as Gateway
+    participant O as Orders
+    participant D as Orders DB
+    Note over O,D: Validate, kiểm tra key và resolve Products đã thành công
+    rect rgb(255, 240, 233)
+      O->>D: BEGIN
+      O->>D: INSERT orders
+      D-->>O: Thành công, chưa commit
+      O->>D: INSERT item thứ nhất
+      D-->>O: Thành công, chưa commit
+      O->>D: INSERT item thứ hai
+      D-->>O: SQL error, ví dụ trigger test SIGNAL 45000
+      O->>D: ROLLBACK
+      D-->>O: Hủy order và item thứ nhất
+    end
+    O->>O: Release connection, chuyển lỗi tới middleware
+    O-->>G: 500 INTERNAL_ERROR cho lỗi trigger test
+    G-->>B: Trả lỗi qua Nginx
+    Note over B,D: Không giữ idempotency key từ transaction đã rollback
+    B->>G: Retry cùng body và key, qua Nginx
+    G->>O: POST /orders
+    O->>D: Tìm key
+    D-->>O: Chưa tồn tại
+    Note over O,D: Sau khi gỡ nguyên nhân lỗi, chạy lại UC05
+    O-->>G: 201 Order sau lần ghi thành công
+    G-->>B: Thành công qua Nginx

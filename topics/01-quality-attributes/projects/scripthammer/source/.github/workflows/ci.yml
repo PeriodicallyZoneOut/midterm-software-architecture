@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+# Cancel a PR run that a newer push has already superseded (#1119).
+#
+# WHY. This workflow had no `concurrency:` block at all, so a force-push left every job of
+# the previous run alive to completion. Nothing consumed the result: branch protection
+# evaluates a required context against the HEAD sha, so the superseded run's verdict is
+# discarded whether it finishes or not. ScriptHammer spent 458 runner-hours in the first
+# nine days of September — 62% of the account — and queue waits on E2E reached 30 minutes,
+# which is time every other repo on the account also waits.
+#
+# WHY PUSH IS KEYED ON THE SHA AND NOT THE BRANCH. Grouping pushes by ref would let a merge
+# cancel the run of the commit before it, and the post-merge run is the one that carries
+# cross-browser coverage — CLAUDE.md's "always check the post-merge run". Keying on
+# `github.sha` gives every commit on main its own group, so no post-merge run is ever
+# cancelled; only PR runs are, and only by a newer push to the same PR.
+#
+# THIS IS NOT THE REPO-WIDE MUTEX e2e.yml USES. That one serializes runs against one shared
+# Supabase project (`cancel-in-progress: false`) and deliberately does not cap anything. This
+# groups per PR, so independent PRs never queue behind each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    # NO MATRIX, so this check is named `Test` (#1353). It was a one-version matrix, and GitHub
+    # appends a matrix value to the job's name, so the REQUIRED check was `Test (20.x)` and every
+    # Node upgrade renamed it, which branch protection then waited on forever. The version lives
+    # in the setup step below instead.
+    name: Test
+    runs-on: ubuntu-latest
+    # Cap: observed max 10.9 min; REQUIRED check, so ~2x headroom. Uncapped, a hung job runs to the 360-minute default (#1119).
+    timeout-minutes: 25
+
+    # Only the public NEXT_PUBLIC_* pair. This job's Supabase calls are ALL
+    # mocked (tests/setup.ts mocks @/lib/supabase/{client,server} globally) and
+    # every test that would need a real backend is excluded in vitest.config.ts
+    # with reasons like "requires service role key". So SUPABASE_SERVICE_ROLE_KEY
+    # and TEST_USER_PRIMARY_PASSWORD were materialised in the environment of the
+    # single highest-frequency workflow in the repo, and nothing could use them.
+    #
+    # The service-role key bypasses RLS entirely — it is the credential the whole
+    # conformance suite exists to make unnecessary. Do not re-add it here without
+    # a test that actually needs it. #574
+    env:
+      NEXT_PUBLIC_DEPLOY_URL: ${{ vars.NEXT_PUBLIC_DEPLOY_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          # The scope step below diffs against the PR base, which a shallow clone lacks
+          # (e2e-local.yml does the same for the same reason).
+          fetch-depth: 0
+
+      # WHICH STEPS THIS DIFF ACTUALLY NEEDS (#1218).
+      #
+      # Coverage + app build + Storybook build are ~9 of this job's ~10 minutes, and it is
+      # the highest-frequency REQUIRED check in the repo. Measured on #1217, a one-markdown-
+      # file PR: coverage 5.7 min, app build 1.7, Storybook 0.6.
+      #
+      # GATED PER-STEP, NOT BY A `paths:` FILTER OR A `needs:` JOB. `Test` IS the
+      # required context — there is no always-reporting aggregate wrapping it — and a
+      # required check that never reports is PENDING FOREVER, not skipped. Either of those
+      # shapes would make every docs-only PR permanently unmergeable.
+      #
+      # Polarity is fail-safe: the gates below test `!= 'true'`, so an empty output, a
+      # crash, or anything the decider cannot classify runs the full job.
+      - name: Decide whether this diff needs the build steps
+        id: scope
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            case "$BASE" in
+              0000000*|'') BASE="$(git rev-parse HEAD^1 2>/dev/null || git rev-parse HEAD)" ;;
+            esac
+            HEAD="${{ github.sha }}"
+          fi
+          node scripts/ci/ci-docs-only.mjs "$BASE" "$HEAD"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.16.1
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate project configuration
+        run: node scripts/detect-project.js
+
+      - name: Run linter
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm type-check
+
+      # The script existed and already failed — CSS said `sm` was 430px while
+      # src/config/breakpoints.ts said 428px — and it was wired into no workflow
+      # and no hook (#373 B2). Landing it green here is what keeps the two in
+      # step; without this step the mirror silently drifts again.
+      - name: Validate breakpoint configuration
+        run: pnpm validate:breakpoints
+
+      # NOTE: there is deliberately no separate `pnpm test --run` step here.
+      # It ran the identical suite that "Check test coverage" runs below —
+      # `vitest --run` vs `vitest run --coverage`, same runner, same discovery,
+      # the coverage `exclude` at vitest.config.ts:72 filters REPORTING, not
+      # execution. Measured on 46be768: both produced 395 files / 4282 tests
+      # over the same 373 named files, zero unique to the plain run. So it cost
+      # ~3m45s per run of a REQUIRED check and bought nothing. #573
+      #
+      # If you ever need the uninstrumented timing, run it locally — do not
+      # re-add it here.
+
+      # Eight node:test files under scripts/__tests__/ cover the tooling
+      # scripts CI itself runs — detect-project.js (step above), validate-
+      # structure.js, audit-components.js (both in component-structure.yml),
+      # migrate-components.js (the command that workflow's PR-comment tells
+      # you to run on failure), plop-generator.js (the mandatory component
+      # generator). vitest.config.ts:20-21 excludes them because vitest
+      # cannot load require('node:test'). These sat dark since the initial
+      # commit with only the exclude and no corresponding runner. 86 pass,
+      # 1 intentional todo (spec-for-unbuilt-feature), 1 intentional file-
+      # skip (contract infra never provisioned). Exit 0.
+      - name: Run script tests (node:test)
+        run: pnpm test:scripts
+
+      # #539: `tests/rebrand/test-rebrand.sh` existed and NO workflow ran it, so
+      # the one script every fork depends on had zero CI coverage. It is a
+      # dry-run harness against a temp copy — no network, no writes to the tree,
+      # ~2s. It belongs in the required `Test` check because a broken
+      # rebrand is discovered by a stranger, on their repo, after forking.
+      - name: Run rebrand harness
+        run: ./tests/rebrand/test-rebrand.sh
+
+      # Same reasoning as #539 above, applied on the day the harness was written
+      # rather than years later: the claim tool touches PERMANENT Apple state
+      # (a bundle identifier is never re-issued), so a regression in it is
+      # discovered by a stranger, on their Apple account, unrecoverably. Runs
+      # the real tool against a stub App Store Connect via the ASC_API_BASE
+      # seam with a generated throwaway key — no network, no Apple, ~2s.
+      - name: Run App Store claim harness
+        run: ./tests/appstore/test-claim-app-store.sh
+
+      # #659: the icons are committed output generated from public/favicon.svg.
+      # This fails if any is missing or was hand-edited away from the mark —
+      # which is how CRUDkit's monogram survived in 13 files long enough to
+      # install onto a client's phone. Presence-only for the PNGs: sharp/libvips
+      # do not produce byte-identical output across versions, and a check that
+      # breaks on an unrelated dependency bump is one everybody learns to ignore.
+      - name: Check brand icons match the mark
+        run: pnpm check:icons
+
+      - name: Check test coverage
+        if: steps.scope.outputs.docs_only != 'true'
+        run: pnpm test:coverage
+
+      - name: Build application
+        if: steps.scope.outputs.docs_only != 'true'
+        run: pnpm build
+
+      - name: Build Storybook
+        if: steps.scope.outputs.docs_only != 'true'
+        run: pnpm build-storybook

@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {orderInput,requestHash,priceOrder} from '../services/orders/src/domain.js';
+const a=randomUUID(),b=randomUUID();
+const body={customerName:'Test',customerEmail:'test@example.com',items:[{productId:a,quantity:2},{productId:b,quantity:3}]};
+test('U01 tính subtotal và tổng bằng giá server',()=>{const p=priceOrder(body,[{id:a,name:'A',priceVnd:15000,isActive:true},{id:b,name:'B',priceVnd:9000,isActive:true}]);assert.equal(p.totalVnd,57000);assert.deepEqual(p.items.map(i=>i.subtotalVnd),[30000,27000]);});
+test('U02 từ chối input sai, trùng dòng, quá nhiều dòng',()=>{for(const quantity of [0,-1,1.5,100])assert.equal(orderInput.safeParse({...body,items:[{productId:a,quantity}]}).success,false);assert.equal(orderInput.safeParse({...body,items:[body.items[0],body.items[0]]}).success,false);assert.equal(orderInput.safeParse({...body,items:Array.from({length:21},()=>({productId:randomUUID(),quantity:1}))}).success,false);assert.equal(orderInput.safeParse({...body,customerEmail:'invalid'}).success,false);});
+test('U03 hash canonical bỏ khác biệt thứ tự và khoảng trắng',()=>{assert.equal(requestHash(orderInput.parse(body)),requestHash(orderInput.parse({...body,customerName:' Test ',customerEmail:'TEST@example.com',items:[...body.items].reverse()})));});
+test('U04 thay đổi số lượng thay đổi hash',()=>assert.notEqual(requestHash(body),requestHash({...body,items:[{productId:a,quantity:3}]})));
+test('U05 giới hạn tiền vẫn an toàn',()=>{const items=Array.from({length:20},()=>({productId:randomUUID(),quantity:99}));const products=items.map(i=>({id:i.productId,name:'Max',priceVnd:1_000_000_000,isActive:true}));const priced=priceOrder({...body,items},products);assert.equal(priced.totalVnd,1_980_000_000_000);assert.ok(Number.isSafeInteger(priced.totalVnd));});

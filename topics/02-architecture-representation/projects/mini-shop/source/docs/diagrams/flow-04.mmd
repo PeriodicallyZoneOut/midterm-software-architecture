@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    participant B as React / Admin
+    participant N as Nginx
+    participant G as Gateway
+    participant P as Products
+    participant D as Products DB
+    B->>N: PATCH /api/products/:id, các trường cần sửa
+    N->>G: Chuyển request
+    G->>P: PATCH /products/:id
+    P->>P: Validate UUID, body không rỗng, whitelist field
+    P->>D: SELECT * FROM products WHERE id=?
+    alt Không có sản phẩm
+      D-->>P: Không có dòng
+      P-->>G: 404 PRODUCT_NOT_FOUND
+      G-->>N: 404
+      N-->>B: Hiển thị lỗi
+    else Có sản phẩm
+      D-->>P: Bản ghi hiện tại
+      P->>D: UPDATE chỉ những cột được gửi
+      D-->>P: Thành công
+      P->>D: SELECT bản ghi sau cập nhật
+      D-->>P: Giá, tên, trạng thái mới
+      P-->>G: 200 Product
+      G-->>N: 200 Product
+      N-->>B: Lưu thành công, tải lại danh mục
+    end
+    Note over B,D: Body sai hoặc rỗng trả 400 trước SQL

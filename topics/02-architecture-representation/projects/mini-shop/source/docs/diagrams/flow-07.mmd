@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    participant B as React / Order detail
+    participant N as Nginx
+    participant G as Gateway
+    participant O as Orders
+    participant D as Orders DB
+    B->>N: GET /api/orders/:id
+    N->>G: Chuyển request
+    G->>O: GET /orders/:id
+    O->>O: Validate UUID
+    O->>D: SELECT * FROM orders WHERE id=?
+    alt Đơn không tồn tại
+      D-->>O: Không có dòng
+      O-->>G: 404 ORDER_NOT_FOUND
+      G-->>N: 404
+      N-->>B: Hiển thị lỗi
+    else Có đơn
+      D-->>O: Tên/email, total, trạng thái, thời gian
+      O->>D: SELECT order_items WHERE order_id=? ORDER BY product_id
+      D-->>O: productName, unitPriceVnd, quantity, subtotalVnd
+      O-->>G: 200 Order + items
+      G-->>N: 200 JSON
+      N-->>B: Hiển thị đơn bằng dữ liệu snapshot
+    end
+    Note over B,D: Không gọi Products, vẫn đọc được khi Products dừng

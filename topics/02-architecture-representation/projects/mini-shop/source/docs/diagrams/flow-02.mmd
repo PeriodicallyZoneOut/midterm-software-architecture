@@ -1,0 +1,18 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant B as React / Cart state
+    participant L as localStorage
+    U->>B: Nhấn Thêm trên card đã tải
+    B->>B: Thêm dòng hoặc tăng quantity tối đa 99
+    B->>L: Lưu mini-cart gồm ID, tên, giá hiển thị, quantity
+    B-->>U: Cập nhật badge và thông báo
+    U->>B: Mở giỏ, sửa quantity hoặc xóa dòng
+    B->>B: Cập nhật state và tính tạm tính
+    B->>L: Lưu mini-cart mới
+    U->>B: Reload trang
+    B->>L: Đọc mini-cart
+    L-->>B: JSON giỏ đã lưu
+    B->>B: Parse và kiểm tra dữ liệu cơ bản
+    B-->>U: Khôi phục giỏ hoặc giỏ trống nếu dữ liệu lỗi
+    Note over U,L: Không gọi Gateway, service hay database khi chỉ thay đổi giỏ

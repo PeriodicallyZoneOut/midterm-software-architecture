@@ -1,0 +1,955 @@
+/**
+ * RLS Payment Policy Tests
+ *
+ * Verifies all 20 RLS policies across the 5 payment tables:
+ * - payment_intents (4 policies + 1 admin)
+ * - payment_results (4 policies + 1 admin)
+ * - subscriptions (3 policies + 1 admin)
+ * - webhook_events (2 policies, service_role only)
+ * - payment_provider_config (1 policy, public read)
+ *
+ * @module tests/rls/payment-rls.test
+ */
+
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import {
+  createAnonClient,
+  createAuthenticatedClient,
+  createServiceClient,
+  createTestUser,
+  deleteTestUser,
+  hasRlsTestEnvironment,
+  RLS_SKIP_REASON,
+  TEST_USERS,
+  type TestUser,
+} from '../fixtures/test-users';
+
+// ── payment_intents ──────────────────────────────────────────────────
+
+describe.skipIf(!hasRlsTestEnvironment())(
+  `RLS: Payment Intents [${RLS_SKIP_REASON}]`,
+  () => {
+    let userA: TestUser;
+    let userB: TestUser;
+    let intentIdA: string;
+
+    beforeAll(async () => {
+      userA = await createTestUser(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      userB = await createTestUser(
+        TEST_USERS.userB.email,
+        TEST_USERS.userB.password
+      );
+
+      // Seed via the SERVICE ROLE. It used to seed through an authenticated client,
+      // which stopped working when #559 T027 revoked the browser's INSERT — every row
+      // is written by the create-order Edge Function under service_role now. A fixture
+      // that seeds the way the product no longer writes is testing a path that does
+      // not exist.
+      const svcSeed = createServiceClient();
+      const { data, error } = await svcSeed
+        .from('payment_intents')
+        .insert({
+          template_user_id: userA.id,
+          amount: 1000,
+          currency: 'usd',
+          type: 'one_time',
+          customer_email: TEST_USERS.userA.email,
+        })
+        .select()
+        .single();
+
+      if (error) throw new Error(`Seed intent failed: ${error.message}`);
+      intentIdA = data.id;
+    });
+
+    afterAll(async () => {
+      // Clean up test data via service role
+      const svc = createServiceClient();
+      await svc.from('payment_intents').delete().eq('id', intentIdA);
+      await deleteTestUser(userA.id);
+      await deleteTestUser(userB.id);
+    });
+
+    it('user can SELECT own payment intents', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('payment_intents')
+        .select('*')
+        .eq('id', intentIdA);
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(1);
+      expect(data![0].template_user_id).toBe(userA.id);
+    });
+
+    it('user cannot SELECT other user payment intents', async () => {
+      const clientB = await createAuthenticatedClient(
+        TEST_USERS.userB.email,
+        TEST_USERS.userB.password
+      );
+      const { data, error } = await clientB
+        .from('payment_intents')
+        .select('*')
+        .eq('id', intentIdA);
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+    });
+
+    it('user CANNOT insert even their own payment intent (#559 T027)', async () => {
+      // This asserted the opposite until T027. The browser is not a writer of
+      // payment_intents any more: create-order is the only place that can price a
+      // purchase from the catalog or authorise a retry, so a row the browser composed
+      // is a price the buyer chose. Refused at the GRANT, before RLS is consulted —
+      // which is why it reads 42501 rather than a policy violation.
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { error } = await clientA.from('payment_intents').insert({
+        template_user_id: userA.id,
+        amount: 500,
+        currency: 'eur',
+        type: 'one_time',
+        customer_email: TEST_USERS.userA.email,
+      });
+
+      expect(error).not.toBeNull();
+      expect(error?.code).toBe('42501');
+    });
+
+    it('user cannot INSERT intent for another user', async () => {
+      // Still refused, and now at the grant rather than the policy — so it holds even
+      // for a row whose template_user_id would have satisfied WITH CHECK.
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { error } = await clientA.from('payment_intents').insert({
+        template_user_id: userB.id,
+        amount: 500,
+        currency: 'usd',
+        type: 'one_time',
+        customer_email: TEST_USERS.userB.email,
+      });
+
+      expect(error).not.toBeNull();
+    });
+
+    it('payment intents are immutable (no UPDATE)', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('payment_intents')
+        .update({ amount: 9999 })
+        .eq('id', intentIdA)
+        .select();
+
+      // TWO layers can stop this, and asserting the wrong one is how this test
+      // broke. Until #565, `authenticated` HELD the UPDATE grant and the
+      // "Payment intents are immutable" policy (`USING (false)`) matched zero
+      // rows, so PostgREST returned `[]`. #565 revoked the grant, so Postgres now
+      // refuses with 42501 BEFORE RLS is consulted and `data` is null — and
+      // `expect(null).toHaveLength(0)` throws.
+      //
+      // The guarantee did not weaken, it strengthened. So assert the PROPERTY —
+      // the row does not change — and accept either refusal, rather than pinning
+      // the mechanism that happens to be in force today.
+      if (error) {
+        expect(error.code).toBe('42501'); // privilege revoked (#565)
+      } else {
+        expect(data).toHaveLength(0); // privilege held, RLS matched nothing
+      }
+
+      // The assertion that actually matters, and the one neither branch above can
+      // fake: read the row back with the service role and require it untouched.
+      // Checking `!== 9999` would pass on a null row, which is the shape of a test
+      // that cannot fail.
+      const svc = createServiceClient();
+      const { data: after, error: readError } = await svc
+        .from('payment_intents')
+        .select('amount')
+        .eq('id', intentIdA)
+        .single();
+
+      expect(readError).toBeNull();
+      expect(after).not.toBeNull();
+      expect(after!.amount).toBe(1000);
+    });
+
+    it('payment intents cannot be deleted by users', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('payment_intents')
+        .delete()
+        .eq('id', intentIdA)
+        .select();
+
+      // THE REFUSAL MOVED FROM THE POLICY LAYER TO THE PRIVILEGE LAYER (#897).
+      //
+      // This used to assert `expect(data).toHaveLength(0)` and never look at
+      // `error` — the DELETE grant existed, so PostgREST ran the statement and
+      // the `USING (false)` policy filtered every row. Zero rows came back with
+      // no error, which is indistinguishable from "the filter matched nothing",
+      // and a row-state-only assertion cannot tell those apart.
+      //
+      // #897 revoked DELETE from `authenticated`, so the statement is now
+      // refused outright. Pinning 42501 is the stronger claim, and it is the
+      // one this repo asks for: a refusal must pin a status rather than be
+      // inferred from unchanged rows.
+      expect(
+        error?.code,
+        'expected DELETE on payment_intents to be refused with 42501 ' +
+          '(insufficient_privilege). If this is null the grant is back — see ' +
+          'tests/rls/payment-intents-grants.test.ts'
+      ).toBe('42501');
+      expect(data).toBeNull();
+
+      // Verify it still exists
+      const svc = createServiceClient();
+      const { data: check } = await svc
+        .from('payment_intents')
+        .select('id')
+        .eq('id', intentIdA)
+        .single();
+      expect(check?.id).toBe(intentIdA);
+    });
+
+    it('anon user cannot read payment intents', async () => {
+      const anon = createAnonClient();
+      const { data, error } = await anon.from('payment_intents').select('*');
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+    });
+
+    it('anon user cannot write payment intents', async () => {
+      const anon = createAnonClient();
+      const { error } = await anon.from('payment_intents').insert({
+        template_user_id: userA.id,
+        amount: 100,
+        currency: 'usd',
+        type: 'one_time',
+        customer_email: 'anon@test.com',
+      });
+
+      expect(error).not.toBeNull();
+    });
+  }
+);
+
+// ── payment_results ──────────────────────────────────────────────────
+
+describe.skipIf(!hasRlsTestEnvironment())(
+  `RLS: Payment Results [${RLS_SKIP_REASON}]`,
+  () => {
+    let userA: TestUser;
+    let userB: TestUser;
+    let intentIdA: string;
+    let resultIdA: string;
+
+    beforeAll(async () => {
+      userA = await createTestUser(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      userB = await createTestUser(
+        TEST_USERS.userB.email,
+        TEST_USERS.userB.password
+      );
+
+      // Intent AND result both via service role. The intent used to be seeded through
+      // an authenticated client; #559 T027 revoked the browser's INSERT, and this
+      // failed as `Cannot read properties of null (reading 'id')` — a null row from a
+      // refused insert, one describe block downstream of where the refusal happened.
+      const svc0 = createServiceClient();
+      const { data: intent, error: intentError } = await svc0
+        .from('payment_intents')
+        .insert({
+          template_user_id: userA.id,
+          amount: 2000,
+          currency: 'usd',
+          type: 'one_time',
+          customer_email: TEST_USERS.userA.email,
+        })
+        .select()
+        .single();
+      if (intentError || !intent) {
+        // Fail where the seed failed, not three assertions later on a null id.
+        throw new Error(
+          `Seed intent failed: ${intentError?.message ?? 'no row'}`
+        );
+      }
+      intentIdA = intent.id;
+
+      // Results can only be inserted by service_role
+      const svc = createServiceClient();
+      const { data: result, error } = await svc
+        .from('payment_results')
+        .insert({
+          intent_id: intentIdA,
+          provider: 'stripe',
+          transaction_id: 'txn_test_001',
+          status: 'succeeded',
+          charged_amount: 2000,
+          charged_currency: 'usd',
+        })
+        .select()
+        .single();
+      if (error) throw new Error(`Seed result failed: ${error.message}`);
+      resultIdA = result.id;
+    });
+
+    afterAll(async () => {
+      const svc = createServiceClient();
+      await svc.from('payment_results').delete().eq('id', resultIdA);
+      await svc.from('payment_intents').delete().eq('id', intentIdA);
+      await deleteTestUser(userA.id);
+      await deleteTestUser(userB.id);
+    });
+
+    it('user can SELECT own payment results (via intent ownership)', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('payment_results')
+        .select('*')
+        .eq('id', resultIdA);
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(1);
+      expect(data![0].intent_id).toBe(intentIdA);
+    });
+
+    it('user cannot SELECT other user payment results', async () => {
+      const clientB = await createAuthenticatedClient(
+        TEST_USERS.userB.email,
+        TEST_USERS.userB.password
+      );
+      const { data, error } = await clientB
+        .from('payment_results')
+        .select('*')
+        .eq('id', resultIdA);
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+    });
+
+    it('authenticated user cannot INSERT payment results', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { error } = await clientA.from('payment_results').insert({
+        intent_id: intentIdA,
+        provider: 'stripe',
+        transaction_id: 'txn_fake_001',
+        status: 'succeeded',
+        charged_amount: 9999,
+      });
+
+      // INSERT is restricted to service_role
+      expect(error).not.toBeNull();
+    });
+
+    it('service role CAN insert payment results', async () => {
+      const svc = createServiceClient();
+      const { data, error } = await svc
+        .from('payment_results')
+        .insert({
+          intent_id: intentIdA,
+          provider: 'stripe',
+          transaction_id: 'txn_test_svc_002',
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data?.status).toBe('pending');
+
+      // Clean up
+      await svc.from('payment_results').delete().eq('id', data!.id);
+    });
+
+    it('payment results are immutable (no UPDATE)', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('payment_results')
+        .update({ status: 'refunded' })
+        .eq('id', resultIdA)
+        .select();
+
+      // Refused by the GRANT, before the `Payment results are immutable` policy is
+      // reached (#1073). The old assertion — an empty array — is what that policy
+      // produces on its own, and is equally true while `authenticated` holds all
+      // seven privileges including TRUNCATE. Only this form excludes that.
+      expect(error?.code).toBe('42501');
+      expect(data).toBeNull();
+    });
+
+    it('payment results cannot be deleted by users', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('payment_results')
+        .delete()
+        .eq('id', resultIdA)
+        .select();
+
+      // As above: refused outright rather than matching no rows (#1073). The
+      // service-role check below stays — it is the counterweight proving the row is
+      // still there, so a refusal cannot be confused with a successful delete.
+      expect(error?.code).toBe('42501');
+      expect(data).toBeNull();
+
+      // Verify still exists
+      const svc = createServiceClient();
+      const { data: check } = await svc
+        .from('payment_results')
+        .select('id')
+        .eq('id', resultIdA)
+        .single();
+      expect(check?.id).toBe(resultIdA);
+    });
+  }
+);
+
+// ── subscriptions ────────────────────────────────────────────────────
+
+describe.skipIf(!hasRlsTestEnvironment())(
+  `RLS: Subscriptions [${RLS_SKIP_REASON}]`,
+  () => {
+    let userA: TestUser;
+    let userB: TestUser;
+    let subIdA: string;
+
+    beforeAll(async () => {
+      userA = await createTestUser(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      userB = await createTestUser(
+        TEST_USERS.userB.email,
+        TEST_USERS.userB.password
+      );
+
+      // SEEDED WITH THE SERVICE CLIENT, and the change is the point (#1089).
+      //
+      // This used to seed with an AUTHENTICATED client, which meant the fixture was
+      // performing the exact exploit the suite exists to prevent: minting your own
+      // subscription with status='active' and any plan_amount, no payment and no edge
+      // function. That capability is now revoked, so this seed could not work — and a
+      // fixture that can only be built by abusing a privilege is evidence the
+      // privilege was wrong, not that the fixture was right.
+      //
+      // Real subscriptions are created by create-stripe-subscription /
+      // create-paypal-subscription and the webhooks, all on the service-role key.
+      // Seeding the same way makes the fixture match production.
+      const svcSeed = createServiceClient();
+      const { data, error } = await svcSeed
+        .from('subscriptions')
+        .insert({
+          template_user_id: userA.id,
+          provider: 'stripe',
+          provider_subscription_id: `sub_test_${Date.now()}`,
+          customer_email: TEST_USERS.userA.email,
+          plan_amount: 999,
+          plan_interval: 'month',
+          status: 'active',
+        })
+        .select()
+        .single();
+      if (error) throw new Error(`Seed subscription failed: ${error.message}`);
+      subIdA = data.id;
+    });
+
+    afterAll(async () => {
+      const svc = createServiceClient();
+      await svc.from('subscriptions').delete().eq('id', subIdA);
+      await deleteTestUser(userA.id);
+      await deleteTestUser(userB.id);
+    });
+
+    it('user can SELECT own subscriptions', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('subscriptions')
+        .select('*')
+        .eq('id', subIdA);
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(1);
+      expect(data![0].template_user_id).toBe(userA.id);
+    });
+
+    it('user cannot SELECT other user subscriptions', async () => {
+      const clientB = await createAuthenticatedClient(
+        TEST_USERS.userB.email,
+        TEST_USERS.userB.password
+      );
+      const { data, error } = await clientB
+        .from('subscriptions')
+        .select('*')
+        .eq('id', subIdA);
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+    });
+
+    it('user can UPDATE own subscription', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('subscriptions')
+        .update({ status: 'canceled', canceled_at: new Date().toISOString() })
+        .eq('id', subIdA)
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data?.status).toBe('canceled');
+
+      // Restore with the SERVICE client, not the user's (#1089).
+      //
+      // This used to restore as clientA and never check the error. Once the UPDATE
+      // policy carries WITH CHECK (status IN ('canceled','canceling')), a user writing
+      // status='active' is refused — so the restore would have silently stopped
+      // restoring, leaving a canceled row for every test after it. An unchecked write
+      // is a decent way to lose an afternoon.
+      //
+      // Restoring as service_role is also the honest fixture: reactivation is the
+      // system's job, done by the resume-subscription edge function.
+      const svcRestore = createServiceClient();
+      const { error: restoreErr } = await svcRestore
+        .from('subscriptions')
+        .update({ status: 'active', canceled_at: null })
+        .eq('id', subIdA);
+      expect(restoreErr).toBeNull();
+    });
+
+    it('user cannot reactivate their own canceled subscription (#1089)', async () => {
+      // The last of #1089's three holes. USING gates the ROW — "is this yours" — and
+      // said nothing about what you may turn it into, so a row owner could flip a
+      // canceled, past_due or expired subscription back to 'active' and have it count
+      // as live. WITH CHECK constrains the NEW row, which is exactly the shape this
+      // needs, and unlike the money columns it does not require comparing to the old
+      // row (a policy cannot do that at all).
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const svc = createServiceClient();
+
+      // Put the row in the state a real cancelled subscriber is in.
+      await svc
+        .from('subscriptions')
+        .update({ status: 'canceled', canceled_at: new Date().toISOString() })
+        .eq('id', subIdA);
+
+      for (const status of ['active', 'grace_period', 'past_due']) {
+        const { data, error } = await clientA
+          .from('subscriptions')
+          .update({ status })
+          .eq('id', subIdA)
+          .select();
+
+        // RLS refuses a WITH CHECK violation with 42501, same code as a missing
+        // privilege — the distinction is invisible here and does not need to be.
+        expect(error?.code, `status='${status}' was not refused`).toBe('42501');
+        expect(data, `status='${status}' returned rows`).toBeNull();
+      }
+
+      // Counterweight one: the row really is still canceled, so the refusals above
+      // were refusals and not writes that matched nothing.
+      const { data: after } = await svc
+        .from('subscriptions')
+        .select('status')
+        .eq('id', subIdA)
+        .single();
+      expect(after?.status).toBe('canceled');
+
+      // Counterweight two: cancelling is still permitted, so the clause narrows rather
+      // than forbids. Without this the test would pass on a policy that blocked every
+      // user write.
+      const { error: cancelErr } = await clientA
+        .from('subscriptions')
+        .update({ status: 'canceled' })
+        .eq('id', subIdA)
+        .select();
+      expect(cancelErr).toBeNull();
+
+      await svc
+        .from('subscriptions')
+        .update({ status: 'active', canceled_at: null })
+        .eq('id', subIdA);
+    });
+
+    it('user cannot UPDATE the money columns of their own subscription', async () => {
+      // #1089. The policy is USING (auth.uid() = template_user_id) with no column
+      // scoping, so it gates ROWS and not COLUMNS: with a table-wide UPDATE grant the
+      // test above — cancelling your own subscription — was the same privilege as
+      // rewriting your own price and period end. That is free perpetual service.
+      //
+      // The grant is now column-scoped to the cancellation surface, so these are
+      // refused before any policy runs. Both directions matter: the test above proves
+      // cancelling still works, and this proves it is no longer a general write.
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+
+      for (const patch of [
+        { plan_amount: 1 },
+        { current_period_end: '2099-01-01T00:00:00.000Z' },
+        { next_billing_date: '2099-01-01T00:00:00.000Z' },
+        { failed_payment_count: 0 },
+      ]) {
+        const column = Object.keys(patch)[0];
+        const { data, error } = await clientA
+          .from('subscriptions')
+          .update(patch)
+          .eq('id', subIdA)
+          .select();
+
+        expect(error?.code, `${column} was not refused`).toBe('42501');
+        expect(data, `${column} returned rows`).toBeNull();
+      }
+
+      // Counterweight: the row is untouched, so a refusal cannot be confused with a
+      // write that happened to change nothing.
+      const svc = createServiceClient();
+      const { data: check } = await svc
+        .from('subscriptions')
+        .select('plan_amount, status')
+        .eq('id', subIdA)
+        .single();
+      expect(check?.plan_amount).toBe(999);
+      expect(check?.status).toBe('active');
+    });
+
+    it('user cannot UPDATE other user subscription', async () => {
+      const clientB = await createAuthenticatedClient(
+        TEST_USERS.userB.email,
+        TEST_USERS.userB.password
+      );
+      const { data } = await clientB
+        .from('subscriptions')
+        .update({ status: 'canceled' })
+        .eq('id', subIdA)
+        .select();
+
+      expect(data).toHaveLength(0);
+    });
+
+    it('user cannot INSERT a subscription for THEMSELVES either (#1089)', async () => {
+      // The bigger half of #1089. `Users create own subscriptions` is
+      // WITH CHECK (auth.uid() = template_user_id), so the policy positively PERMITS
+      // this — a user minting their own row with status='active' and any plan_amount
+      // satisfies it perfectly. Only the missing privilege stops it now.
+      //
+      // The neighbouring "for another user" test could never catch this: it is blocked
+      // by the policy predicate, so it passed just as happily while this hole was open.
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('subscriptions')
+        .insert({
+          template_user_id: userA.id,
+          provider: 'stripe',
+          provider_subscription_id: `sub_selfmint_${Date.now()}`,
+          customer_email: TEST_USERS.userA.email,
+          plan_amount: 0,
+          plan_interval: 'month',
+          status: 'active',
+        })
+        .select();
+
+      expect(error?.code).toBe('42501');
+      expect(data).toBeNull();
+
+      // Counterweight: only the seeded row exists, so the refusal was a refusal and
+      // not an insert that silently matched nothing.
+      const svc = createServiceClient();
+      const { data: rows } = await svc
+        .from('subscriptions')
+        .select('id')
+        .eq('template_user_id', userA.id);
+      expect(rows).toHaveLength(1);
+    });
+    it('user cannot INSERT subscription for another user', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { error } = await clientA.from('subscriptions').insert({
+        template_user_id: userB.id,
+        provider: 'stripe',
+        provider_subscription_id: `sub_fake_${Date.now()}`,
+        customer_email: TEST_USERS.userB.email,
+        plan_amount: 999,
+        plan_interval: 'month',
+        status: 'active',
+      });
+
+      expect(error).not.toBeNull();
+    });
+
+    it('user cannot DELETE own subscription — revoked, not merely unpoliced', async () => {
+      // Nothing covered DELETE or TRUNCATE on this table before #1073, so the suite
+      // could not tell whether the privileges were held: handing DELETE back to
+      // `authenticated` left all 118 tests green. The destructive half of the fix was
+      // unprotected against a future re-widening.
+      //
+      // The two outcomes are distinguishable, and that is what makes this test work:
+      //   privilege revoked         -> 42501, refused outright
+      //   privilege held, no policy -> [] and no error, RLS matched nothing
+      // Only the first also excludes TRUNCATE, which consults no policy at all.
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('subscriptions')
+        .delete()
+        .eq('id', subIdA)
+        .select();
+
+      expect(error?.code).toBe('42501');
+      expect(data).toBeNull();
+
+      // Counterweight: the row survives, so a refusal cannot be mistaken for a
+      // delete that worked.
+      const svc = createServiceClient();
+      const { data: check } = await svc
+        .from('subscriptions')
+        .select('id')
+        .eq('id', subIdA);
+      expect(check).toHaveLength(1);
+    });
+  }
+);
+
+// ── webhook_events ───────────────────────────────────────────────────
+
+describe.skipIf(!hasRlsTestEnvironment())(
+  `RLS: Webhook Events [${RLS_SKIP_REASON}]`,
+  () => {
+    let userA: TestUser;
+    let webhookId: string;
+
+    beforeAll(async () => {
+      userA = await createTestUser(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+
+      // Seed a webhook event via service role
+      const svc = createServiceClient();
+      const { data, error } = await svc
+        .from('webhook_events')
+        .insert({
+          provider: 'stripe',
+          provider_event_id: `evt_test_${Date.now()}`,
+          event_type: 'payment_intent.succeeded',
+          event_data: { test: true },
+          signature: 'sig_test_abc',
+        })
+        .select()
+        .single();
+      if (error) throw new Error(`Seed webhook failed: ${error.message}`);
+      webhookId = data.id;
+    });
+
+    afterAll(async () => {
+      const svc = createServiceClient();
+      await svc.from('webhook_events').delete().eq('id', webhookId);
+      await deleteTestUser(userA.id);
+    });
+
+    it('authenticated user cannot INSERT webhook events', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { error } = await clientA.from('webhook_events').insert({
+        provider: 'stripe',
+        provider_event_id: `evt_fake_${Date.now()}`,
+        event_type: 'payment_intent.succeeded',
+        event_data: { fake: true },
+        signature: 'sig_fake',
+      });
+
+      expect(error).not.toBeNull();
+    });
+
+    it('authenticated user cannot UPDATE webhook events', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('webhook_events')
+        .update({ processed: true })
+        .eq('id', webhookId)
+        .select();
+
+      // Refused by the GRANT, before any policy is consulted (#1073). This used to
+      // assert an empty array — "no rows matched" — which passes for a much weaker
+      // reason than the test's name claims, and coexisted with `authenticated`
+      // holding TRUNCATE on the table.
+      expect(error?.code).toBe('42501');
+      expect(data).toBeNull();
+    });
+
+    it('authenticated user cannot SELECT webhook events', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA.from('webhook_events').select('*');
+
+      // Refused by the GRANT, not merely filtered to zero rows by RLS (#1073).
+      // "No SELECT policy" and "no SELECT privilege" produce identical-looking
+      // passes here, and only the second of them also withholds TRUNCATE.
+      expect(error?.code).toBe('42501');
+      expect(data).toBeNull();
+    });
+
+    it('service role CAN insert webhook events', async () => {
+      const svc = createServiceClient();
+      const { data, error } = await svc
+        .from('webhook_events')
+        .insert({
+          provider: 'paypal',
+          provider_event_id: `evt_svc_${Date.now()}`,
+          event_type: 'PAYMENT.CAPTURE.COMPLETED',
+          event_data: { svc: true },
+          signature: 'sig_svc_test',
+        })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data?.provider).toBe('paypal');
+
+      // Clean up
+      await svc.from('webhook_events').delete().eq('id', data!.id);
+    });
+
+    it('service role CAN update webhook events', async () => {
+      const svc = createServiceClient();
+      const { data, error } = await svc
+        .from('webhook_events')
+        .update({ processed: true, processed_at: new Date().toISOString() })
+        .eq('id', webhookId)
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data?.processed).toBe(true);
+    });
+  }
+);
+
+// ── payment_provider_config ──────────────────────────────────────────
+
+describe.skipIf(!hasRlsTestEnvironment())(
+  `RLS: Payment Provider Config [${RLS_SKIP_REASON}]`,
+  () => {
+    let userA: TestUser;
+
+    beforeAll(async () => {
+      userA = await createTestUser(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+    });
+
+    afterAll(async () => {
+      await deleteTestUser(userA.id);
+    });
+
+    it('authenticated user can SELECT provider config', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { data, error } = await clientA
+        .from('payment_provider_config')
+        .select('*');
+
+      // USING(true) lets all authenticated users read
+      expect(error).toBeNull();
+      // May be empty if no config rows seeded, but no error
+      expect(data).toBeDefined();
+    });
+
+    it('authenticated user cannot INSERT provider config', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      const { error } = await clientA.from('payment_provider_config').insert({
+        provider: 'stripe',
+        enabled: true,
+        config_status: 'configured',
+        priority: 1,
+      });
+
+      // No INSERT policy for authenticated, only SELECT
+      expect(error).not.toBeNull();
+    });
+
+    it('authenticated user cannot UPDATE provider config', async () => {
+      const clientA = await createAuthenticatedClient(
+        TEST_USERS.userA.email,
+        TEST_USERS.userA.password
+      );
+      // Try to update all rows
+      const { data } = await clientA
+        .from('payment_provider_config')
+        .update({ enabled: false })
+        .neq('id', '00000000-0000-0000-0000-000000000000')
+        .select();
+
+      expect(data).toHaveLength(0);
+    });
+
+    it('anon user cannot read provider config', async () => {
+      const anon = createAnonClient();
+      const { data, error } = await anon
+        .from('payment_provider_config')
+        .select('*');
+
+      // No anon SELECT policy
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+    });
+  }
+);

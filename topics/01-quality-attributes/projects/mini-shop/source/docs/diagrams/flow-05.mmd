@@ -1,0 +1,43 @@
+sequenceDiagram
+    autonumber
+    participant B as React / Checkout
+    participant L as localStorage
+    participant N as Nginx
+    participant G as Gateway
+    participant O as Orders
+    participant OD as Orders DB
+    participant P as Products
+    participant PD as Products DB
+    B->>B: Validate form, lấy productId và quantity
+    B->>L: Lưu mini-pending gồm body và Idempotency-Key
+    B->>N: POST /api/orders + Idempotency-Key
+    Note over B,N: Body chỉ gồm customerName, customerEmail, items
+    N->>G: Chuyển nguyên request /api/orders
+    G->>O: POST /orders + key + X-Request-Id
+    O->>O: Validate, chuẩn hóa tên/email, SHA-256 canonical body
+    O->>OD: SELECT id,request_hash WHERE idempotency_key=?
+    OD-->>O: Chưa có key
+    O->>P: POST /internal/products/resolve, ids[], cùng requestId
+    P->>PD: SELECT products WHERE id IN (...)
+    PD-->>P: ID, tên, giá hiện tại, trạng thái
+    P-->>O: 200 items
+    O->>O: Kiểm tra active, tính subtotal và total bằng giá server
+    rect rgb(231, 243, 235)
+      Note over O,OD: Một transaction cục bộ trên cùng connection
+      O->>OD: BEGIN
+      O->>OD: INSERT orders với key UNIQUE, hash, total
+      loop Mỗi mặt hàng
+        O->>OD: INSERT order_items, snapshot tên và đơn giá
+      end
+      O->>OD: COMMIT
+      OD-->>O: Ghi toàn bộ thành công
+    end
+    O->>OD: SELECT orders theo ID
+    OD-->>O: Header đơn hàng
+    O->>OD: SELECT order_items WHERE order_id=?
+    OD-->>O: Các dòng snapshot
+    O-->>G: 201 Order kèm items
+    G-->>N: 201 Order
+    N-->>B: Đặt hàng thành công
+    B->>L: Xóa mini-pending, lưu giỏ trống
+    B->>B: Chuyển /orders/:id và tải chi tiết theo UC07

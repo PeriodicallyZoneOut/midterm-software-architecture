@@ -1,0 +1,103 @@
+name: lab01-mini-shop
+x-service: &service
+  restart: unless-stopped
+  init: true
+  healthcheck:
+    test: [CMD, node, -e, "fetch('http://127.0.0.1:'+process.env.PORT+'/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+    interval: 5s
+    timeout: 3s
+    retries: 12
+    start_period: 20s
+x-database: &database
+  image: mariadb:11.8
+  restart: unless-stopped
+  healthcheck:
+    test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+    interval: 5s
+    timeout: 3s
+    retries: 20
+    start_period: 30s
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    ports: ['127.0.0.1:${WEB_PORT:-8080}:80']
+    networks: [backend]
+    depends_on:
+      gateway: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  gateway:
+    <<: *service
+    build:
+      context: .
+      args: {SERVICE: gateway}
+    environment:
+      PORT: 3000
+      PRODUCTS_URL: http://products:3001
+      ORDERS_URL: http://orders:3002
+    networks: [backend]
+    depends_on:
+      products: {condition: service_healthy}
+      orders: {condition: service_healthy}
+  products:
+    <<: *service
+    build:
+      context: .
+      args: {SERVICE: products}
+    environment:
+      PORT: 3001
+      DB_HOST: products-db
+      DB_NAME: products
+      DB_USER: products_app
+      DB_PASSWORD: ${PRODUCTS_DB_PASSWORD:?Copy .env.example to .env}
+    networks: [backend, products-data]
+    depends_on:
+      products-db: {condition: service_healthy}
+  orders:
+    <<: *service
+    build:
+      context: .
+      args: {SERVICE: orders}
+    environment:
+      PORT: 3002
+      DB_HOST: orders-db
+      DB_NAME: orders
+      DB_USER: orders_app
+      DB_PASSWORD: ${ORDERS_DB_PASSWORD:?Copy .env.example to .env}
+      PRODUCTS_URL: http://products:3001
+    networks: [backend, orders-data]
+    depends_on:
+      orders-db: {condition: service_healthy}
+  products-db:
+    <<: *database
+    environment:
+      MARIADB_DATABASE: products
+      MARIADB_USER: products_app
+      MARIADB_PASSWORD: ${PRODUCTS_DB_PASSWORD:?required}
+      MARIADB_ROOT_PASSWORD: ${PRODUCTS_ROOT_PASSWORD:?required}
+    volumes: [products-data:/var/lib/mysql]
+    networks: [products-data]
+  orders-db:
+    <<: *database
+    environment:
+      MARIADB_DATABASE: orders
+      MARIADB_USER: orders_app
+      MARIADB_PASSWORD: ${ORDERS_DB_PASSWORD:?required}
+      MARIADB_ROOT_PASSWORD: ${ORDERS_ROOT_PASSWORD:?required}
+    volumes: [orders-data:/var/lib/mysql]
+    networks: [orders-data]
+networks:
+  backend:
+  products-data:
+    internal: true
+  orders-data:
+    internal: true
+volumes:
+  products-data:
+  orders-data:

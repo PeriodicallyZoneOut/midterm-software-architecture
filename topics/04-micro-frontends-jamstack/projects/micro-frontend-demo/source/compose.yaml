@@ -1,0 +1,6 @@
+services:
+  demo:
+    build: .
+    ports:
+      - "127.0.0.1:9001:80"
+    restart: unless-stopped

@@ -1,0 +1,12 @@
+{
+  "removed_git_metadata": [
+    "topics/01-quality-attributes/projects/online-boutique/source/.git",
+    "topics/01-quality-attributes/projects/scripthammer/source/.git",
+    "topics/03-microservices-infrastructure/projects/istio/source/.git",
+    "topics/03-microservices-infrastructure/projects/online-boutique/source/.git",
+    "topics/04-micro-frontends-jamstack/projects/blog-starter/source/.git",
+    "topics/04-micro-frontends-jamstack/projects/micro-frontend-demo/source/.git"
+  ],
+  "root_git_preserved": true,
+  "working_files_preserved": true
+}

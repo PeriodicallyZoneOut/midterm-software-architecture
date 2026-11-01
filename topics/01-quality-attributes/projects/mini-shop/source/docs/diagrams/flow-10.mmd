@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    participant B as React / Checkout
+    participant N as Nginx
+    participant G as Gateway
+    participant O as Orders
+    participant D as Orders DB
+    participant P as Products
+    participant PD as Products DB
+    B->>N: POST /api/orders với key mới
+    N->>G: Chuyển request
+    G->>O: POST /orders
+    O->>D: Tìm idempotency key
+    D-->>O: Chưa tồn tại
+    O->>P: POST /internal/products/resolve
+    alt Products không kết nối được hoặc timeout 3s
+      Note over O,P: fetch lỗi, hoặc AbortSignal hủy request
+      O-->>G: 503 PRODUCTS_UNAVAILABLE
+    else Products hoạt động
+      P->>PD: SELECT sản phẩm theo ids
+      PD-->>P: Kết quả truy vấn
+      alt Thiếu ít nhất một ID
+        P-->>O: 404 PRODUCT_NOT_FOUND
+        O-->>G: 404 PRODUCT_NOT_FOUND
+      else Đủ ID nhưng có sản phẩm inactive
+        P-->>O: 200 items có isActive=false
+        O-->>G: 409 PRODUCT_INACTIVE
+      else Products trả lỗi HTTP khác
+        P-->>O: HTTP không thành công
+        O-->>G: 503 PRODUCTS_UNAVAILABLE
+      end
+    end
+    G-->>N: Giữ status và JSON lỗi của Orders
+    N-->>B: Hiện lỗi, cho phép sửa giỏ hoặc thử lại
+    Note over O,D: Chưa BEGIN, không có INSERT orders/order_items

@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    participant H as Docker healthchecks
+    participant G as Gateway
+    participant P as Products
+    participant PD as Products DB
+    participant O as Orders
+    participant OD as Orders DB
+    H->>G: GET /health/ready trên cổng nội bộ 3000
+    G-->>H: 200 nếu process phục vụ được request
+    H->>P: GET /health/ready trên cổng nội bộ 3001
+    P->>PD: SELECT 1
+    PD-->>P: Thành công hoặc lỗi kết nối
+    P-->>H: 200 khi DB truy cập được, non-200 khi lỗi
+    H->>O: GET /health/ready trên cổng nội bộ 3002
+    O->>OD: SELECT 1
+    OD-->>O: Thành công hoặc lỗi kết nối
+    O-->>H: 200 khi DB truy cập được, non-200 khi lỗi
+    Note over O,OD: Orders readiness không kiểm tra Products
+    Note over H,G: Gateway readiness không xác nhận mọi upstream đều healthy

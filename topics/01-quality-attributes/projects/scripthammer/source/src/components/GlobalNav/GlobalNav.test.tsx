@@ -1,0 +1,448 @@
+import { render, screen, within, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { GlobalNav } from './GlobalNav';
+import { THEMES } from '@/config/themes';
+import { CONSENT_STORAGE_KEY } from '@/config/accessibility-tokens';
+
+const { signOut, checkIsAdmin } = vi.hoisted(() => ({
+  signOut: vi.fn(),
+  checkIsAdmin: vi.fn().mockResolvedValue(false),
+}));
+
+let pathname = '/';
+vi.mock('next/navigation', () => ({ usePathname: () => pathname }));
+
+let user: { id: string } | null = null;
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ user, signOut }),
+}));
+vi.mock('@/hooks/useUserProfile', () => ({
+  useUserProfile: () => ({ profile: { display_name: 'Ada' } }),
+}));
+
+let unread = 0;
+vi.mock('@/hooks/useUnreadCount', () => ({ useUnreadCount: () => unread }));
+
+vi.mock('@/services/admin/admin-auth-service', () => ({
+  AdminAuthService: class {
+    checkIsAdmin = checkIsAdmin;
+  },
+}));
+vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({}) }));
+
+// Heavy children, each already covered by its own suite. Stubbing keeps this
+// file about the NAV rather than about a logo's animation or a colour panel.
+vi.mock('@/components/atomic/SpinningLogo', () => ({
+  LayeredScriptHammerLogo: () => <span data-testid="logo" />,
+}));
+vi.mock('@/components/atomic/AnimatedLogo', () => ({
+  AnimatedLogo: () => <span data-testid="animated-logo" />,
+}));
+vi.mock('@/components/molecular/ColorblindToggle', () => ({
+  ColorVisionPanel: () => <div data-testid="color-vision-panel" />,
+}));
+vi.mock('@/components/navigation/FontSizeControl', () => ({
+  TextSettingsPanel: () => <div data-testid="text-settings-panel" />,
+}));
+vi.mock('@/components/atomic/AvatarDisplay', () => ({
+  default: () => <span data-testid="avatar" />,
+}));
+
+let renderer: 'atlas' | 'diorama' = 'atlas';
+vi.mock('@/twin/renderer-select', () => ({ selectRenderer: () => renderer }));
+
+/** Grant functional consent, which is what allows persistence to localStorage. */
+const allowFunctional = () =>
+  localStorage.setItem(
+    CONSENT_STORAGE_KEY,
+    JSON.stringify({ functional: true })
+  );
+
+const setSearch = (search: string) =>
+  window.history.replaceState({}, '', `/${search}`);
+
+beforeEach(() => {
+  pathname = '/';
+  user = null;
+  unread = 0;
+  renderer = 'atlas';
+  signOut.mockClear();
+  checkIsAdmin.mockClear().mockResolvedValue(false);
+  localStorage.clear();
+  // sessionStorage too: applyTheme writes there on EVERY path, consent or not, so
+  // leaving it set carries one test's chosen theme into the next mount. Same trap
+  // as ThemeSwitcher.test.tsx.
+  sessionStorage.clear();
+  setSearch('');
+  document.documentElement.removeAttribute('data-theme');
+  window.matchMedia = vi.fn().mockReturnValue({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }) as unknown as typeof window.matchMedia;
+});
+
+describe('GlobalNav structure', () => {
+  it('keeps the data-global-nav hook the twin routes style against', () => {
+    const { container } = render(<GlobalNav />);
+    // globals.css:1855 and four E2E specs select this. It is an attribute rather
+    // than an accessible name deliberately, so renaming a label cannot silently
+    // break the glass treatment (#301).
+    expect(container.querySelector('[data-global-nav]')).not.toBeNull();
+  });
+
+  it('renders exactly ONE navigation landmark', () => {
+    render(<GlobalNav />);
+    // The desktop rail used to be a second <nav> nested inside this one. Two
+    // unnamed navigation landmarks are announced identically in a landmark list,
+    // which axe reports as landmark-unique; it is a div now.
+    expect(screen.getAllByRole('navigation')).toHaveLength(1);
+  });
+
+  it('puts Home on the logo rather than a nav slot (#378)', () => {
+    render(<GlobalNav />);
+    expect(screen.getByRole('link', { name: /— Home$/ })).toHaveAttribute(
+      'href',
+      '/'
+    );
+    expect(screen.queryByRole('link', { name: /^Home$/ })).toBeNull();
+  });
+});
+
+describe('GlobalNav destinations', () => {
+  it('offers the top-level destinations', () => {
+    render(<GlobalNav />);
+    const nav = screen.getByRole('navigation');
+    for (const label of [
+      'Docs',
+      'Blog',
+      'Play',
+      'Pricing',
+      'Themes',
+      'Status',
+    ]) {
+      expect(
+        within(nav).getAllByRole('link', { name: label }).length
+      ).toBeGreaterThan(0);
+    }
+  });
+
+  it('hides the grouped demos until the group is opened', async () => {
+    const user = userEvent.setup();
+    render(<GlobalNav />);
+    expect(screen.queryByRole('menuitem', { name: 'Wireframes' })).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Demos' }));
+    for (const label of [
+      'Atlas',
+      'Diorama',
+      'Wireframes',
+      'Map',
+      'Game',
+      'Payments',
+      'Schedule',
+    ]) {
+      expect(screen.getByRole('menuitem', { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it('uses a FULL navigation for the two map entries', async () => {
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByRole('button', { name: 'Demos' }));
+    // reload:true renders a plain <a>, not a client Link. The renderer is chosen
+    // from the query at MOUNT and is not reactive, so a client-side query-only
+    // nav would keep the current renderer and atlas↔diorama could never switch.
+    const atlas = screen.getByRole('menuitem', { name: 'Atlas' });
+    expect(atlas.tagName).toBe('A');
+    expect(atlas.getAttribute('href')).toContain('/chatt');
+  });
+});
+
+describe('GlobalNav active state', () => {
+  it('marks the current top-level route', () => {
+    pathname = '/blog';
+    render(<GlobalNav />);
+    expect(screen.getAllByRole('link', { name: 'Blog' })[0].className).toMatch(
+      /active|text-primary|font-semibold|bg-/
+    );
+  });
+
+  it('treats a nested route as being under its section', () => {
+    pathname = '/blog/some-post';
+    render(<GlobalNav />);
+    expect(screen.getAllByRole('link', { name: 'Blog' })[0].className).toMatch(
+      /active|text-primary|font-semibold|bg-/
+    );
+  });
+
+  it('tells Atlas and Diorama apart, which the pathname alone cannot', async () => {
+    // Both are /chatt; they differ only by ?diorama, and usePathname is
+    // query-blind. The nav reflects the ACTUAL renderer instead.
+    pathname = '/chatt';
+    renderer = 'diorama';
+    setSearch('?diorama');
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByRole('button', { name: 'Demos' }));
+
+    const diorama = screen.getByRole('menuitem', { name: 'Diorama' });
+    const atlas = screen.getByRole('menuitem', { name: 'Atlas' });
+    await waitFor(() => expect(diorama.className).toContain('active'));
+    expect(atlas.className).not.toContain('active');
+  });
+});
+
+describe('GlobalNav authentication', () => {
+  it('offers sign in and sign up to a signed-out visitor', () => {
+    render(<GlobalNav />);
+    expect(
+      screen.getAllByRole('link', { name: 'Sign In' }).length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole('link', { name: 'Sign Up' }).length
+    ).toBeGreaterThan(0);
+  });
+
+  it('swaps them for an account menu once signed in', () => {
+    user = { id: 'user-1' };
+    render(<GlobalNav />);
+    expect(screen.getByLabelText('User account menu')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
+  });
+
+  it('makes the account trigger a real button that reports its state (#1018)', async () => {
+    // Was an it.fails. It used to be a `<label tabIndex={0}>` inside a DaisyUI
+    // `:focus-within` dropdown — the pattern #378 rejected for Display and Demos
+    // because returning focus to a trigger that lives inside `.dropdown`
+    // re-opens the panel on the same frame.
+    user = { id: 'user-1' };
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    const trigger = screen.getByRole('button', { name: 'User account menu' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await u.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('closes the account menu when a destination in it is chosen', async () => {
+    // useDismissable closes on an outside press, Escape and tab-out — a link
+    // INSIDE the panel is none of those. The DaisyUI version closed by accident,
+    // because activating a link moved focus out of the `<label>`. Without
+    // closeOnSelect the menu would stay open over the page just navigated to.
+    user = { id: 'user-1' };
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    const trigger = screen.getByRole('button', { name: 'User account menu' });
+    await u.click(trigger);
+    await u.click(screen.getByRole('link', { name: 'Profile' }));
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('closes on keyboard activation too, not just pointer', async () => {
+    // The pointer case alone would be satisfied by the wrapper's existing blur
+    // handler in some situations, so the keyboard path is asserted separately:
+    // Enter on a focused link keeps focus INSIDE the wrapper, so blur cannot be
+    // what closes it — only closeOnSelect can.
+    user = { id: 'user-1' };
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    const trigger = screen.getByRole('button', { name: 'User account menu' });
+    await u.click(trigger);
+
+    screen.getByRole('link', { name: 'Profile' }).focus();
+    await u.keyboard('{Enter}');
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('hides the admin link from a non-admin', async () => {
+    user = { id: 'user-1' };
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByLabelText('User account menu'));
+    await waitFor(() => expect(checkIsAdmin).toHaveBeenCalledWith('user-1'));
+    expect(screen.queryByRole('link', { name: 'Admin Dashboard' })).toBeNull();
+  });
+
+  it('shows it to an admin', async () => {
+    user = { id: 'admin-1' };
+    checkIsAdmin.mockResolvedValue(true);
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByLabelText('User account menu'));
+    // Tightened from findAllByRole(...)[0] to the singular query. Both panels
+    // used to render at all times, so the name matched twice and the index hid
+    // it; only the opened panel is mounted now, so a duplicate name here would
+    // be a real regression and this will catch it (#1018).
+    expect(
+      await screen.findByRole('link', { name: 'Admin Dashboard' })
+    ).toHaveAttribute('href', '/admin');
+  });
+
+  it('does not ask whether a signed-out visitor is an admin', () => {
+    render(<GlobalNav />);
+    expect(checkIsAdmin).not.toHaveBeenCalled();
+  });
+
+  it('signs out through the context', async () => {
+    user = { id: 'user-1' };
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByLabelText('User account menu'));
+    await u.click(screen.getAllByRole('button', { name: /sign out/i })[0]);
+    expect(signOut).toHaveBeenCalled();
+  });
+});
+
+describe('GlobalNav unread messages', () => {
+  it('shows no badge at zero', () => {
+    user = { id: 'user-1' };
+    render(<GlobalNav />);
+    const messages = screen.getAllByRole('link', { name: 'Messages' })[0];
+    expect(messages.textContent).not.toMatch(/\d/);
+  });
+
+  it('shows the count when there is one', () => {
+    user = { id: 'user-1' };
+    unread = 3;
+    render(<GlobalNav />);
+    expect(
+      screen.getAllByRole('link', { name: 'Messages' })[0].textContent
+    ).toContain('3');
+  });
+});
+
+describe('GlobalNav theming', () => {
+  it('syncs to the theme ThemeScript already applied, rather than overwriting it', async () => {
+    document.documentElement.setAttribute('data-theme', THEMES[4]);
+    render(<GlobalNav />);
+    // ThemeScript runs before hydration; the nav must not stomp its work with a
+    // default on mount, which would flash the wrong theme on every page load.
+    await waitFor(() =>
+      expect(document.documentElement.getAttribute('data-theme')).toBe(
+        THEMES[4]
+      )
+    );
+  });
+
+  it('applies a theme chosen from the Display panel', async () => {
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByRole('button', { name: 'Display' }));
+    await u.click(screen.getByRole('button', { name: THEMES[6] }));
+    expect(document.documentElement.getAttribute('data-theme')).toBe(THEMES[6]);
+  });
+
+  it('does NOT persist to localStorage without functional consent (#1016)', async () => {
+    // Was an it.fails. GlobalNav carried its own theme implementation and wrote
+    // localStorage unconditionally, so picking a theme here ignored the
+    // visitor's cookie choice while doing it on /themes respected it. #382
+    // extracted applyTheme precisely so a second copy could not drift.
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByRole('button', { name: 'Display' }));
+    await u.click(screen.getByRole('button', { name: THEMES[6] }));
+
+    expect(localStorage.getItem('theme')).toBeNull();
+    // Still remembered for the session — declining cookies costs persistence
+    // across visits, not the ability to choose a theme at all.
+    expect(sessionStorage.getItem('theme')).toBe(THEMES[6]);
+  });
+
+  it('DOES persist once functional consent is granted', async () => {
+    // The other half, so the test above cannot be satisfied by a component that
+    // simply never writes anything.
+    allowFunctional();
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByRole('button', { name: 'Display' }));
+    await u.click(screen.getByRole('button', { name: THEMES[6] }));
+
+    expect(localStorage.getItem('theme')).toBe(THEMES[6]);
+  });
+
+  it('broadcasts the change to components listening in-page', async () => {
+    // applyTheme's StorageEvent is consent-gated; this CustomEvent is not, and is
+    // the only signal a declined visitor produces.
+    const heard: string[] = [];
+    const onThemeChange = (e: Event) =>
+      heard.push((e as CustomEvent).detail.theme);
+    window.addEventListener('themechange', onThemeChange);
+
+    const u = userEvent.setup();
+    render(<GlobalNav />);
+    await u.click(screen.getByRole('button', { name: 'Display' }));
+    await u.click(screen.getByRole('button', { name: THEMES[6] }));
+
+    window.removeEventListener('themechange', onThemeChange);
+    expect(heard).toContain(THEMES[6]);
+  });
+});
+
+describe('/chatt active state — exactly one destination lights up', () => {
+  // THE BUG (user-reported). Three nav entries point at /chatt: Play
+  // (?diorama&walk) at top level, plus Atlas (no query) and Diorama (?diorama)
+  // inside Demos. The check was a binary — `href.includes('?diorama')` — so on
+  // ?diorama it matched Play AND Diorama, and Demos lit up too because one of
+  // its children was active. Two active top-level items at once, on screen.
+  //
+  // Uses this file's existing harness (`renderer` + `setSearch`) rather than
+  // poking window.location: selectRenderer is mocked here, so a test that sets
+  // only the URL exercises nothing.
+  const setChatt = (search: string, r: 'atlas' | 'diorama') => {
+    pathname = '/chatt';
+    renderer = r;
+    setSearch(search);
+  };
+
+  /** Top-level rail items currently showing the active treatment. */
+  const activeTopLevel = () =>
+    Array.from(document.querySelectorAll('.sh-rail-active'))
+      .map((el) => (el.textContent ?? '').replace(/[\s▾]+/g, ' ').trim())
+      .filter(Boolean);
+
+  it('on ?diorama&walk, Play is active and Demos is NOT', () => {
+    setChatt('?diorama&walk', 'diorama');
+    render(<GlobalNav />);
+    expect(activeTopLevel()).toEqual(['Play']);
+  });
+
+  it('on ?diorama, Demos is active and Play is NOT', () => {
+    setChatt('?diorama', 'diorama');
+    render(<GlobalNav />);
+    expect(activeTopLevel()).toEqual(['Demos']);
+  });
+
+  it('on the bare atlas, Demos is active and Play is NOT', () => {
+    setChatt('', 'atlas');
+    render(<GlobalNav />);
+    expect(activeTopLevel()).toEqual(['Demos']);
+  });
+
+  it('CONTROL: never more than one top-level item is active, on any /chatt url', () => {
+    // The assertion that encodes the bug itself. A future fourth /chatt
+    // destination reusing an existing discriminator fails here rather than
+    // quietly lighting two things up.
+    const cases: [string, 'atlas' | 'diorama'][] = [
+      ['', 'atlas'],
+      ['?diorama', 'diorama'],
+      ['?diorama&walk', 'diorama'],
+      ['?walk', 'diorama'],
+      ['?ortho', 'diorama'],
+      ['?edit', 'diorama'],
+    ];
+    for (const [q, r] of cases) {
+      setChatt(q, r);
+      const { unmount } = render(<GlobalNav />);
+      expect(
+        activeTopLevel().length,
+        `url ${q || '(bare)'}`
+      ).toBeLessThanOrEqual(1);
+      unmount();
+    }
+  });
+});

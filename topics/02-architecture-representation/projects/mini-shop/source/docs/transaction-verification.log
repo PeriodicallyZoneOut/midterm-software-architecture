@@ -1,0 +1,6 @@
+
+> test:transaction
+> node scripts/verify-transaction.mjs
+
+PASS A15 injected second-item failure rolls back order and first item
+PASS A16 same-key retry succeeds after rollback

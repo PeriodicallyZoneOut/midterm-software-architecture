@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    participant B as React / Orders list
+    participant N as Nginx
+    participant G as Gateway
+    participant O as Orders
+    participant D as Orders DB
+    B->>N: GET /api/orders?page=1&pageSize=10
+    N->>G: Giữ query string
+    G->>O: GET /orders?page=1&pageSize=10
+    O->>O: Validate page và pageSize
+    O->>D: SELECT orders ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?
+    D-->>O: Các header của trang hiện tại
+    O->>D: SELECT COUNT(*) AS total FROM orders
+    D-->>O: Tổng số đơn
+    O-->>G: 200 items,total,page,pageSize
+    G-->>N: 200 JSON
+    N-->>B: Hiển thị danh sách và nút chuyển trang
+    B->>N: GET /api/orders?page=2&pageSize=10
+    Note over N,D: Lặp lại với OFFSET của trang tiếp theo

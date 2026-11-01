@@ -1,0 +1,24 @@
+{
+  "name": "lab-01-mini-shop",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "frontend",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "node --import tsx tests/unit.test.ts",
+    "test:api": "node --import tsx tests/api.test.ts",
+    "test:e2e": "playwright test",
+    "verify": "npm run build && npm test",
+    "test:stack": "node scripts/verify-stack.mjs",
+    "test:transaction": "node scripts/verify-transaction.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "@types/node": "^24.0.0"
+  }
+}

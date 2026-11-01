@@ -1,0 +1,21 @@
+import {test,expect} from '@playwright/test';
+test('E01–E03 catalog, cart persistence, checkout, deep link',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/');await expect(page.getByRole('heading',{name:'Đơn giản hơn.' ,exact:false})).toBeVisible();
+ await page.getByLabel('Tìm sản phẩm').fill('Sổ tay');await page.getByRole('button',{name:'Thêm Sổ tay Everyday vào giỏ'}).click();
+ await page.getByRole('link',{name:/Giỏ hàng/}).click();await page.reload();await expect(page.getByRole('heading',{name:'Sổ tay Everyday'})).toBeVisible();
+ await page.getByLabel('Họ và tên').fill('Browser Tester');await page.getByLabel('Email',{exact:true}).fill('browser@example.com');await page.getByRole('button',{name:'Xác nhận đặt hàng'}).click();
+ await expect(page).toHaveURL(/\/orders\/[a-f0-9-]+/);await expect(page.getByRole('heading',{name:/Đặt hàng thành công/})).toBeVisible();await page.reload();await expect(page.getByText('browser@example.com',{exact:true})).toBeVisible();
+ await page.getByRole('link',{name:'Tất cả đơn hàng'}).click();await expect(page.getByRole('heading',{name:'Đơn hàng',exact:true})).toBeVisible();expect(errors).toEqual([]);
+ await page.screenshot({path:'docs/screenshots/orders-desktop.png',fullPage:true});
+});
+test('E04 quản trị thêm/sửa/ẩn sản phẩm',async({page})=>{
+ const name='Test UI '+Date.now();await page.goto('/admin/products');await page.getByLabel('Tên sản phẩm').fill(name);await page.getByLabel('Mô tả').fill('Browser created');await page.getByLabel('Giá (VND)').fill('25000');await page.getByRole('button',{name:'Lưu sản phẩm'}).click();await expect(page.getByRole('status')).toHaveText('Đã lưu sản phẩm.');await page.getByRole('button',{name:'Sửa '+name,exact:true}).click();await page.getByLabel('Đang bán').uncheck();await page.getByRole('button',{name:'Lưu sản phẩm'}).click();await expect(page.locator('.admin-row').filter({hasText:name})).toContainText('Ngừng bán');await page.goto('/');await page.getByLabel('Tìm sản phẩm').fill(name);await expect(page.getByRole('heading',{name:'Chưa tìm thấy sản phẩm'})).toBeVisible();
+});
+test('E05 mobile không tràn ngang',async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.getByRole('button',{name:'Thêm Sổ tay Everyday vào giỏ'})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'docs/screenshots/catalog-mobile.png',fullPage:true});await page.getByRole('button',{name:'Thêm Sổ tay Everyday vào giỏ'}).click();await page.getByRole('link',{name:/Giỏ hàng/}).click();await expect(page.getByLabel('Họ và tên')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});
+test('E07 mất response sau commit, reload và retry cùng key',async({page,request})=>{
+ const before=await (await request.get('/api/orders')).json();await page.goto('/');await page.getByRole('button',{name:'Thêm Sổ tay Everyday vào giỏ'}).click();await page.getByRole('link',{name:/Giỏ hàng/}).click();await page.getByLabel('Họ và tên').fill('Retry Buyer');await page.getByLabel('Email',{exact:true}).fill('retry@example.com');
+ await page.route('**/api/orders',async route=>{if(route.request().method()==='POST'){await route.fetch();await route.abort('failed');}else await route.continue();});
+ await page.getByRole('button',{name:'Xác nhận đặt hàng'}).click();await expect(page.getByRole('alert')).toBeVisible();await page.unroute('**/api/orders');await page.reload();await page.getByRole('button',{name:'Xác nhận đặt hàng'}).click();await expect(page).toHaveURL(/\/orders\/[a-f0-9-]+/);const after=await(await request.get('/api/orders')).json();expect(after.total-before.total).toBe(1);
+});
+test('E06 desktop screenshot and runtime',async({page})=>{const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:1440,height:1000});await page.goto('/');await expect(page.getByRole('button',{name:'Thêm Sổ tay Everyday vào giỏ'})).toBeVisible();await page.screenshot({path:'docs/screenshots/catalog-desktop.png',fullPage:true});expect(errors).toEqual([]);});

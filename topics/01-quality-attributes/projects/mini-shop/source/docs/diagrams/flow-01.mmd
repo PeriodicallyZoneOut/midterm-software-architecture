@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant B as React / Catalog
+    participant N as Nginx
+    participant G as Gateway
+    participant P as Products
+    participant D as Products DB
+    U->>B: Mở trang sản phẩm
+    B->>N: GET /api/products
+    N->>G: GET /api/products
+    G->>P: GET /products + X-Request-Id
+    P->>D: SELECT * FROM products ORDER BY created_at,id
+    D-->>P: Các sản phẩm, gồm cả inactive
+    P->>P: Map price_vnd thành priceVnd, is_active thành boolean
+    P-->>G: 200 JSON items
+    G-->>N: 200 JSON + X-Request-Id
+    N-->>B: Danh sách sản phẩm
+    B->>B: Chỉ hiện isActive=true
+    B-->>U: Card tên, mô tả, giá VND
+    U->>B: Nhập từ khóa tìm kiếm
+    B->>B: Lọc tên trong dữ liệu đã tải
+    B-->>U: Danh sách đã lọc hoặc trạng thái trống
+    Note over B,D: Tìm kiếm hiện tại chạy local, không phát sinh SQL/API mới

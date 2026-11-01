@@ -1,0 +1,50 @@
+
+> verify
+> npm run build && npm test
+
+
+> build
+> npm run build --workspaces
+
+
+> @mini/frontend@1.0.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 40 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.36 kB │ gzip:  0.27 kB
+dist/assets/index-BPXj-c1W.css    9.41 kB │ gzip:  2.84 kB
+dist/assets/index-CyvmxvT4.js   274.10 kB │ gzip: 87.10 kB
+✓ built in 2.81s
+
+> @mini/gateway@1.0.0 build
+> tsc -p tsconfig.json
+
+
+> @mini/orders@1.0.0 build
+> tsc -p tsconfig.json
+
+
+> @mini/products@1.0.0 build
+> tsc -p tsconfig.json
+
+
+> test
+> node --import tsx tests/unit.test.ts
+
+✔ U01 tính subtotal và tổng bằng giá server (1.875835ms)
+✔ U02 từ chối input sai, trùng dòng, quá nhiều dòng (6.638316ms)
+✔ U03 hash canonical bỏ khác biệt thứ tự và khoảng trắng (13.74795ms)
+✔ U04 thay đổi số lượng thay đổi hash (0.437394ms)
+✔ U05 giới hạn tiền vẫn an toàn (0.549193ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35.865194

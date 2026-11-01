@@ -1,0 +1,124 @@
+/**
+ * Both payment webhooks must actually CALL the order transition (#1151, #1150).
+ *
+ * WHY A SOURCE-LEVEL GUARD. `vitest.config.ts` excludes `supabase/functions/**` and no workflow
+ * runs `deno test`, so **nothing in CI ever executes an Edge Function**. `advance-order.ts`
+ * itself is covered behaviourally in `tests/unit/advance-order.test.ts` (it imports nothing, so
+ * it can be pulled into the required `Test` check) — but the WIRING has no such route.
+ * Delete a call site and every check in this repo stays green while a buyer's order silently
+ * stops advancing.
+ *
+ * That is not hypothetical here: `send-payment-email` shipped deployed, contract-tested, and
+ * called by nothing, and survived that way until #1150. A tested unit with no caller is the
+ * exact failure this file exists to prevent recurring one level up.
+ */
+
+'use strict';
+
+const { describe, it } = require('node:test');
+const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const FN = path.resolve(__dirname, '..', '..', 'supabase', 'functions');
+const HELPER = path.join(FN, '_shared', 'advance-order.ts');
+
+/** Block and full-line `//` comments removed, so this cannot match its own rationale. */
+function code(file) {
+  return fs
+    .readFileSync(file, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
+const WEBHOOKS = [
+  ['stripe-webhook', path.join(FN, 'stripe-webhook', 'index.ts')],
+  ['paypal-webhook', path.join(FN, 'paypal-webhook', 'index.ts')],
+];
+
+describe('the payment webhooks advance the order (#1151)', () => {
+  it('the helper exists and is what the tests cover', () => {
+    // Anti-vacuity: a moved file would make the assertions below pass by inspecting nothing.
+    assert.ok(fs.existsSync(HELPER), 'advance-order.ts is gone');
+    const src = code(HELPER);
+    assert.match(src, /export async function advanceOrderAndNotify/);
+    assert.ok(src.length > 1000, 'advance-order.ts is suspiciously small');
+  });
+
+  for (const [name, file] of WEBHOOKS) {
+    it(`${name} imports and calls it`, () => {
+      const src = code(file);
+      assert.match(
+        src,
+        /import \{ advanceOrderAndNotify \} from '\.\.\/_shared\/advance-order\.ts'/,
+        `${name} no longer imports the transition`
+      );
+      assert.match(
+        src,
+        /await advanceOrderAndNotify\(/,
+        `${name} imports the transition but never calls it — the order stays 'pending' forever ` +
+          'and the buyer gets no receipt, with every check in this repo still green (#1151).'
+      );
+    });
+  }
+
+  it('stripe wires BOTH of its payment paths, including the one production uses', () => {
+    // `/checkout` sends buyers to HOSTED Stripe Checkout, so `checkout.session.completed` is the
+    // event a real purchase produces. Wiring only `payment_intent.succeeded` — the inline path —
+    // would look complete and do nothing for an actual customer. That is the #1126 shape.
+    const src = code(WEBHOOKS[0][1]);
+    const calls = (src.match(/await advanceOrderAndNotify\(/g) || []).length;
+    assert.ok(
+      calls >= 2,
+      `stripe-webhook calls the transition ${calls} time(s); both handlePaymentIntentSucceeded ` +
+        'and handlePaymentCheckout need it, and hosted Checkout is the path production takes.'
+    );
+  });
+
+  it('the transition throws only on a database error, never on a permanent condition', () => {
+    // A webhook that throws makes the provider retry. That is RIGHT for a transient failure, a
+    // read or write that may succeed next time, which the webhook claim retries up to
+    // MAX_ATTEMPTS before marking the event permanently_failed (#1307). It is WRONG for a
+    // permanent condition, retried for nothing: an intent nothing ordered, or a retry chain
+    // whose links do not match (#1126, #1308).
+    // So the only throws allowed are database errors, and the missing-order path must stay a
+    // return. This used to forbid every throw, which is how a failed read passed for "no
+    // order" and a paid order went unadvanced with the event marked processed.
+    const src = code(HELPER);
+    const thrown = [
+      ...src.matchAll(/^\s*(?:if \([^)]*\)\s*)?throw ([A-Za-z_$][\w$]*)/gm),
+    ].map((m) => m[1]);
+    assert.deepStrictEqual(
+      thrown.sort(),
+      ['intentError', 'orderError', 'updateError'],
+      'advance-order.ts throws something other than its three database errors (the order read, ' +
+        'the intent read the retry walk makes (#1308), and the status write). A throw on a ' +
+        'permanent condition turns it into a provider retry for nothing (#1151, #1126).'
+    );
+    assert.match(
+      src,
+      /return \{ advanced: false, reason: 'no-order' \}/,
+      'the missing-order path no longer returns quietly (#1126)'
+    );
+  });
+
+  it('the receipt cannot fail the webhook', () => {
+    const src = code(HELPER);
+    assert.match(src, /catch\s*\(/, 'the receipt send is no longer wrapped');
+    assert.match(
+      src,
+      /return false;/,
+      'a failed receipt no longer degrades to a return — a Resend outage would become a ' +
+        'provider retry storm, and retries are how one purchase becomes many emails.'
+    );
+  });
+
+  it('CONTROL: the matcher reports absence when a call is removed', () => {
+    // Without this, an always-true matcher would satisfy every assertion above.
+    const mutated = code(WEBHOOKS[0][1]).replace(
+      /await advanceOrderAndNotify\(/g,
+      'noop('
+    );
+    assert.doesNotMatch(mutated, /await advanceOrderAndNotify\(/);
+  });
+});
