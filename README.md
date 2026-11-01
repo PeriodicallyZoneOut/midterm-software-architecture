@@ -59,3 +59,7 @@ Một chủ đề có nhiều project. Một project có thể xuất hiện tro
 ## Nguồn repository
 
 Xem [REPOSITORIES.md](REPOSITORIES.md) để biết remote URL, branch và commit của từng bản project trước khi loại bỏ Git metadata.
+
+## Phân công nhóm
+
+Xem [phân công cho Tú, Toàn, Tường, Thế Anh, Nhật Anh](docs/TEAM-ASSIGNMENT.md). Mỗi người tự thuyết trình và deploy/demo độc lập phần mình; dùng chung project không có nghĩa dùng chung deployment.

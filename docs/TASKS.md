@@ -160,3 +160,7 @@ Dàn deck đề xuất 40–55 slide chính, điều chỉnh theo thời lượn
 - [ ] MFE có runtime composition/state flow; JAMstack có build production/prerender evidence và mô tả hosting đúng thực tế.
 - [ ] Event Sourcing có nguồn sự thật và replay đã chứng minh; CQRS có write/read path; EDA có producer/broker/subscribers, delivery semantics và failure behavior.
 - [ ] Người trình bày mở được file chứa từng component quan trọng, đọc được luồng xử lý và giải thích được một tình huống lỗi mà không dựa hoàn toàn vào slide.
+
+## Phân công và lựa chọn hệ thống cập nhật
+
+Áp dụng [TEAM-ASSIGNMENT.md](TEAM-ASSIGNMENT.md): chủ đề 2 ưu tiên Online Boutique đã có nguồn open source thay cho Mini Shop làm demo chính; các task C vẫn áp dụng về 4+1/mapping nhưng phải thay domain, data model và sequences theo source Boutique. Mini Shop là ví dụ phụ. Mỗi người tự deploy và thu evidence riêng, kể cả project trùng nhau.
