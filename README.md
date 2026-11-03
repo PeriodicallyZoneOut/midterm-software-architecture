@@ -9,7 +9,7 @@ Repo chuẩn bị vấn đáp giữa kỳ: kiến thức trên slide, demo và c
 | [Quality Attributes](topics/01-quality-attributes/README.md) | Online Boutique, ScriptHammer, Mini Shop |
 | [Architecture Representation](topics/02-architecture-representation/README.md) | Mini Shop |
 | [Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana](topics/03-microservices-infrastructure/README.md) | Online Boutique, Istio |
-| [Micro-Frontends và JAMstack](topics/04-micro-frontends-jamstack/README.md) | Micro Frontend Fruit Store, Next.js Blog Starter |
+| [Micro-Frontends và JAMstack](topics/04-micro-frontends-jamstack/README.md) | micro-frontend-demo, ScriptHammer |
 | [Event Sourcing và CQRS](topics/05-event-sourcing-cqrs/README.md) | People Profiles |
 | [Event-Driven Architecture](topics/06-event-driven-architecture/README.md) | People Profiles |
 
@@ -44,6 +44,10 @@ midterm-software-architecture/
 ```
 
 Một chủ đề có nhiều project. Một project có thể xuất hiện trong nhiều chủ đề, nhưng phần kiến thức áp dụng tập trung riêng vào chủ đề tương ứng. Thư mục dùng cách viết `implementation`.
+
+## Phần Toàn đã có tài liệu ôn tập
+
+[Hướng dẫn ôn MFE/JAMstack](topics/04-micro-frontends-jamstack/EXAM-GUIDE.md): source chính trong workspace, ScriptHammer thay Blog Starter; có mapping/sơ đồ, notes, 20 câu vấn đáp và hai deck PDF/PPTX tiếng Việt. Không chạy lại demo trong lượt tài liệu.
 
 ## Bắt đầu
 

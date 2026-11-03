@@ -24,12 +24,12 @@ Mỗi task chỉ đóng khi có artifact, cách tái hiện và người trình 
 
 ## A. Chốt hệ thống và xác nhận môi trường
 
-- [ ] **A01 · P0 · Chốt ma trận đề bài → demo.** Scalability: Online Boutique/Locust; security: ScriptHammer/Codex audit; representation: Mini Shop; infrastructure: Online Boutique; MFE: fruit store; JAMstack: blog-starter-app; CQRS/EDA: People; ES: theo F01. Đầu ra `requirement-matrix.md`: mỗi yêu cầu có project, slide, kịch bản và evidence path; không để mục ES chỉ ghi “có RabbitMQ”.
+- [ ] **A01 · P0 · Chốt ma trận đề bài → demo.** Scalability: Online Boutique/Locust; security: ScriptHammer/Codex audit; representation: Mini Shop; infrastructure: Online Boutique; MFE: fruit store; JAMstack: ScriptHammer (nguồn workspace của Toàn); CQRS/EDA: People; ES: theo F01. Đầu ra `requirement-matrix.md`: mỗi yêu cầu có project, slide, kịch bản và evidence path; không để mục ES chỉ ghi “có RabbitMQ”.
 - [ ] **A02 · P0 · Chụp baseline runtime.** Lưu ngày/giờ, Docker/Compose version, danh sách project/container, health, CPU/RAM/disk, tool versions và port; kiểm tra HTTP read-only các app. Phân biệt “có source”, “có build”, “đã deploy”, “đang healthy”, “đã kiểm chứng nghiệp vụ”. Không lưu env/secret/PII trong evidence.
 - [ ] **A03 · P0 · Giải quyết xung đột tài nguyên.** People dùng MariaDB host port 3307; kiểm tra các dịch vụ khác trước khi khởi động. Mini Shop và ScriptHammer Kurrent web cùng mặc định 8080. Chọn port khác hoặc chạy theo lịch, kiểm tra URL/callback nếu đổi. Đầu ra bảng port + lịch demo và kiểm tra hai stack cần dùng đồng thời.
-- [ ] **A04 · P0 · Chốt bản JAMstack.** So sánh `blog-starter` và `blog-starter-app`, lockfile, dependency và content; chọn bản chính, giữ bản còn lại làm tham khảo. Cập nhật tình trạng README sau khi xác minh; không xóa source/volume để “dọn”.
+- [x] **A04 · P0 · Chốt bản JAMstack.** Theo Toàn ngày 03/11/2026, dùng `ScriptHammer` trong workspace thay Blog Starter. Tài liệu/slide đã cập nhật; runtime evidence theo dõi riêng.
 - [ ] **A05 · P0 · Runbook cho từng demo đã chọn.** Ghi đúng working directory, lệnh build/start/status/log/stop, URL, readiness, seed cần thiết, cách rollback, thứ tự khởi động. Sửa hướng dẫn Mini Shop đang dùng `cd lab-01` thành đúng thư mục chứa Compose. Xác nhận clean start không reset dữ liệu hiện có.
-- [ ] **A06 · P1 · Xác nhận nguồn open source.** Lưu upstream URL, license, commit/tag hoặc snapshot hash, phần chỉnh sửa local của Online Boutique/ScriptHammer/MFE/blog. Nếu không có Git metadata, ghi cách tải và hash thay vì đoán commit. Đầu ra phần “system under test” trong report.
+- [ ] **A06 · P1 · Xác nhận nguồn open source.** Lưu upstream URL, license, commit/tag hoặc snapshot hash, phần chỉnh sửa local của Online Boutique/ScriptHammer/MFE. Nếu không có Git metadata, ghi cách tải và hash thay vì đoán commit. Đầu ra phần “system under test” trong report.
 - [ ] **A07 · P1 · Tạo chỗ lưu artifact.** Đề xuất `midterm/{slides,architecture,mappings,demos,reports,evidence}/`; mỗi evidence có timestamp, project/version, command, expected/actual, giới hạn. Tách secret và dữ liệu hồ sơ/email thật khỏi tài liệu chia sẻ.
 
 ## B. Quality Attributes: kiến thức, scalability, security
@@ -92,20 +92,20 @@ Mỗi task chỉ đóng khi có artifact, cách tái hiện và người trình 
 
 ### E1. Micro-Frontends
 
-- [ ] **E01 · P1 · Viết 2–3 slide MFE.** Domain/team boundary, build/deploy/runtime composition; Module Federation host/remote/exposes/shared; so sánh component library và monolithic SPA. Trade-off bundle/version/shared dependency, UX/CSS consistency, failure isolation và trust remote code.
-- [ ] **E02 · P1 · Khôi phục demo cổng 9001.** Build/start đúng Compose, kiểm tra host/checkout và hai `remoteEntry.js`, asset paths/deep links. Lưu DevTools Network minh họa remote tải ở runtime; ghi local Compose hiện gộp build và deploy.
-- [ ] **E03 · P1 · Vẽ sequence load remote và mapping.** Main → `RemoteComponent` → `loadComponent` → script `remoteEntry` → share scope/container init → module factory → React render. Mỗi bước chỉ đúng file/symbol trong inspection và webpack expose tương ứng.
-- [ ] **E04 · P1 · Vẽ sequence add-to-cart.** ProductCard → `window.fsEvents` topic `addItem` → Cart Zustand → publish `cart` → ProductCard/count + localStorage. Giải thích owner state, payload contract, subscribe/unsubscribe, refresh và giới hạn pubsub trong một browser.
+- [x] **E01 · P1 · Viết 2–3 slide MFE.** Domain/team boundary, build/deploy/runtime composition; Module Federation host/remote/exposes/shared; so sánh component library và monolithic SPA. Trade-off bundle/version/shared dependency, UX/CSS consistency, failure isolation và trust remote code.
+- [ ] **E02 · P1 · Đối chiếu demo MFE đã chạy của Toàn.** Source chính là `micro-frontend-demo` ngoài repo, Webpack 9001/9002/9003. Kiểm tra host/checkout, remoteEntry và chunks theo runbook. Compose trong bản copy gộp bundles vào một Nginx; không gán nó cho nguồn chính. Lượt tài liệu không chạy lại app.
+- [x] **E03 · P1 · Vẽ sequence load remote và mapping.** Main → `RemoteComponent` → `loadComponent` → script `remoteEntry` → share scope/container init → module factory → React render. Mỗi bước chỉ đúng file/symbol trong inspection và webpack expose tương ứng.
+- [x] **E04 · P1 · Vẽ sequence add-to-cart.** ProductCard → `window.fsEvents` topic `addItem` → Cart Zustand → publish `cart` → ProductCard/count + localStorage. Giải thích owner state, payload contract, subscribe/unsubscribe, refresh và giới hạn pubsub trong một browser.
 - [ ] **E05 · P1 · Demo độc lập và failure.** Thay URL remote sang một build riêng hoặc đổi remote UI có kiểm soát; ghi host có cần rebuild không. Mô phỏng remote unavailable, quan sát actual ErrorBoundary/fallback và phần UI còn hoạt động. Không tuyên bố production deploy độc lập chỉ từ cấu trúc folder.
 
-### E2. JAMstack
+### E2. JAMstack — ScriptHammer theo lựa chọn của Toàn
 
-- [ ] **E06 · P1 · Viết 2–3 slide JAMstack.** JavaScript–APIs–Markup, build time/request time, prerender/CDN, headless content, cache invalidation và rebuild; so sánh CSR/SSR/SSG/ISR, đánh dấu mode thực sự có trong blog. Không coi mọi Next.js app là JAMstack.
-- [ ] **E07 · P0 · Build production bản blog đã chốt ở A04.** Dùng lockfile, ghi version Node/Next và build log; xử lý font/network theo cấu hình thật. Xác minh output route và HTML/prerender metadata, start production rồi kiểm tra HTTP; `.next/dev` không đạt tiêu chí.
-- [ ] **E08 · P1 · Mapping content pipeline.** `_posts/*.md` → filesystem/gray-matter (`api.ts`) → `generateStaticParams` → remark → page/post-body → generated HTML/assets → hosting → browser. Giải thích `api.ts` là local library, chưa có backend HTTP API riêng.
-- [ ] **E09 · P1 · Demo vòng đời nội dung.** Chọn bài mẫu → xem source HTML → sửa Markdown → chứng minh production cũ chưa đổi → rebuild/restart → bài mới xuất hiện. Lưu timestamp/artifact; so sánh với nguyên lý SSR tạo HTML theo từng request; ghi rõ đây là đối chiếu lý thuyết nếu chưa có demo SSR khác.
-- [ ] **E10 · P1 · Mô tả hosting đúng triển khai.** Nếu giữ `next start`, ghi Node server đang serve prerendered pages và runtime features. Nếu chọn static export, bổ sung config/image strategy trên bản phù hợp rồi chứng minh file export serve bằng static server. CDN thực tế chưa có thì vẽ là phương án dự kiến.
-- [ ] **E11 · P2 · Đối chiếu ScriptHammer.** Chỉ `output: 'export'` và luồng client gọi Supabase, tách static delivery khỏi backend API/Auth. Chỉ dùng làm demo phụ khi build/export và cấu hình API đã xác nhận.
+- [x] **E06 · P1 · Slide JAMstack.** Có JavaScript–APIs–Markup, build/request time, cache/rebuild, CSR/SSR/SSG/ISR; ScriptHammer dùng static export + CSR, SSR/ISR chỉ là đối chiếu.
+- [ ] **E07 · P0 · Đối chiếu production export ScriptHammer.** Toàn đã chạy demo; liên kết build log/version và HTML/assets của phiên cá nhân. Lượt này không chạy lại. Config export không tự chứng minh build thành công; dev server chưa đủ bằng chứng SSG.
+- [x] **E08 · P1 · Mapping pipeline ScriptHammer.** `public/blog/*.md` → `generate:blog`/gray-matter → `blog-data.json` → `generateStaticParams`/markdownProcessor → HTML/assets export → hosting → browser. prebuild/deploy chưa tự gọi generate:blog.
+- [ ] **E09 · P1 · Đối chiếu vòng đời nội dung.** Dùng evidence phiên của Toàn: bản A chưa đổi khi sửa Markdown; sinh JSON/rebuild/publish B; kiểm tra cache/SW. Có runbook/expected nhưng chưa có actual mới.
+- [x] **E10 · P1 · Hosting theo cấu hình thật.** Export → artifact/Pages; Node build khác SSR server; Supabase/Edge xử lý API. Deployment URL thật cần evidence riêng.
+- [x] **E11 · P2 · ScriptHammer là demo chính.** Thay vai trò demo phụ cũ; không làm thêm Blog Starter. Xem [ma trận phần Toàn](../topics/04-micro-frontends-jamstack/requirement-matrix.md).
 
 ## F. Event Sourcing và CQRS — People
 

@@ -1,5 +1,7 @@
 # Kiểm kê demo và ánh xạ kiến trúc phục vụ vấn đáp giữa kỳ
 
+> Cập nhật phần Toàn 03/11/2026: MFE dùng `micro-frontend-demo`, JAMstack dùng `ScriptHammer` trong workspace. Mô tả Blog Starter/bản copy bên dưới là kiểm kê lịch sử. Xem [nguồn chính và ma trận mới](../topics/04-micro-frontends-jamstack/EXAM-GUIDE.md). Không chạy lại app.
+
 Ngày kiểm tra: 2026-11-01. Phạm vi: mã nguồn, README, cấu hình triển khai và trạng thái Docker trong workspace. Backlog thực hiện: [TASKS.md](TASKS.md).
 
 Đây là kết quả inspection để lập kế hoạch; chưa chạy load test, audit đầy đủ, replay hay triển khai thêm hệ thống. Các kết quả test ghi trong README cũ là bằng chứng lịch sử, chưa được chạy lại ở lượt kiểm tra này.

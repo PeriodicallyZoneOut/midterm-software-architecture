@@ -9,7 +9,7 @@ Mỗi bạn tự phụ trách kiến thức, slide, thuyết trình, deploy, dem
 | **Nhật Anh** | 1. Quality Attributes: Scalability và Security | Online Boutique + ScriptHammer | Load test có số liệu trước/sau scale; audit bảo mật có scope, code evidence, phân tích và giới hạn |
 | **Thế Anh** | 2. Architecture Representation | Online Boutique (open source đã có) | Tái dựng kiến trúc từ source/runtime; 4+1 Views + schema/data model, component mapping và diễn giải bằng chữ |
 | **Tường** | 3. Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana | Online Boutique + Istio/addons | Cluster, services, mesh, metrics và dashboard thực hoạt động; demo traffic/failure/recovery |
-| **Toàn** | 4. Micro-Frontends và JAMstack | Fruit Store + Next.js Blog Starter | Runtime composition và state flow; production prerender/build/rebuild và hosting đúng thực tế |
+| **Toàn** | 4. Micro-Frontends và JAMstack | micro-frontend-demo + ScriptHammer | Runtime composition và state flow; production prerender/build/rebuild và hosting đúng thực tế |
 | **Tú** | 5. Event Sourcing/CQRS và 6. EDA | People Profiles | Command/query, event source/replay, outbox/inbox, hai consumer độc lập và failure semantics |
 
 Tú nhận hai mục vì cùng project và có phần kiến thức/triển khai giao nhau. Không yêu cầu xây hai ứng dụng nghiệp vụ khác nhau, nhưng phải có hai kịch bản và có thể deploy hai stack riêng để kiểm chứng từng chủ đề. Độ khó Event Sourcing còn chưa rõ nên cần kiểm tra sớm, không coi đây là phần nhẹ.
@@ -86,17 +86,19 @@ Thế Anh có workload sơ đồ/mapping lớn hơn, dù không cần mesh/monit
 
 ## 7. Toàn — Micro-Frontends và JAMstack
 
-**Đã có:** Fruit Store Main/Products/Cart, Module Federation, PubSub, Zustand, Compose/Nginx; Blog Starter source/lockfile. Production prerender của bản blog chưa được xác nhận khi kiểm kê.
+**Nguồn chính theo Toàn (03/11/2026):** `micro-frontend-demo` và `ScriptHammer` ở workspace, cạnh repo tài liệu. ScriptHammer thay Blog Starter làm demo JAMstack chính. [Bắt đầu ôn tập](../topics/04-micro-frontends-jamstack/EXAM-GUIDE.md) · [ma trận yêu cầu](../topics/04-micro-frontends-jamstack/requirement-matrix.md).
 
-**Phải tự deploy:** Fruit Store và Blog Starter của Toàn. Có thể chọn Docker/static hosting phù hợp; phải có production build thật của blog, không dùng dev server để kết luận SSG.
+**Trạng thái:** Toàn cho biết đã chạy hai hệ thống. Lượt này inspect source và dựng slide, không chạy lại hoặc tạo log runtime. QA slide không chứng minh app đã build/deploy production.
 
-- [ ] Slide MFE: host/remote/exposes/shared, runtime load, state ownership, failure và remote trust. Chỉ `remoteEntry.js`, loader, event bus và Cart store trong code.
-- [ ] Deploy Fruit Store; demo add/remove cart, refresh/persistence và Network tải remote; giải thích luồng ProductCard → event → Zustand → cart update.
-- [ ] Demo remote unavailable/fallback; nếu trình bày deploy độc lập thì tự có build/URL remote thay được mà host không rebuild. Ghi rõ Compose mặc định gộp ba bundles vào một Nginx.
-- [ ] Slide JAMstack: build/request time, CSR/SSR/SSG/ISR, content pipeline và cache/rebuild; phân biệt tính năng thực có với kiến thức mở rộng.
-- [ ] Build production blog; chỉ `_posts` → parser → `generateStaticParams` → HTML/assets. Chứng minh cập nhật Markdown cần rebuild để đổi bản production.
-- [ ] Nêu hosting thật: `next start` hay static export; không gọi local Node server là CDN. Nếu chọn export phải cấu hình và serve export thành công.
-- [ ] Demo thành công khi chạy độc lập được cả hai project và chỉ rõ component/code của từng kiểu kiến trúc; không chỉ mở giao diện.
+- [x] Slide MFE: host/remote/exposes/shared, runtime load, state ownership, failure và remote trust; có mapping/sơ đồ loader, event bus, store.
+- [ ] Đối chiếu evidence cá nhân: add/remove, refresh, Network remoteEntry và remote unavailable/fallback. Nếu nói deploy độc lập, cần build/URL remote thay được mà host không rebuild.
+- [x] Phân biệt MFE chính (Webpack dev servers) với bản copy (Compose gộp bundles vào Nginx).
+- [x] Slide JAMstack: build/request time, CSR/SSR/SSG/ISR, content pipeline, cache/rebuild và hosting ScriptHammer.
+- [x] Mapping `public/blog/*.md` → `generate:blog`/gray-matter → `blog-data.json` → `generateStaticParams`/markdownProcessor → HTML/assets export. prebuild/deploy chưa tự gọi bước sinh JSON.
+- [ ] Đối chiếu production export và vòng đời nội dung từ phiên của Toàn: sửa nguồn chưa đổi bản đang serve; sinh JSON/rebuild/publish đổi bản; phân biệt cache/client cũ.
+- [x] Giải thích static export/Pages theo cấu hình, Supabase/Edge APIs là backend động; không gọi local dev server là CDN hoặc gán SSR/ISR cho Pages.
+- [x] Có kiến trúc, runbook, speaker notes và 10 câu vấn đáp mỗi chủ đề.
+- [ ] Diễn tập và liên kết evidence cá nhân; chỉ đúng code, một luồng chính, một lỗi và một trade-off.
 
 ## 8. Tú — Event Sourcing/CQRS và EDA
 
