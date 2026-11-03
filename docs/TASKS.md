@@ -24,7 +24,7 @@ Mỗi task chỉ đóng khi có artifact, cách tái hiện và người trình 
 
 ## A. Chốt hệ thống và xác nhận môi trường
 
-- [ ] **A01 · P0 · Chốt ma trận đề bài → demo.** Scalability: Online Boutique/Locust; security: ScriptHammer/Codex audit; representation: Mini Shop; infrastructure: Online Boutique; MFE: fruit store; JAMstack: blog-starter-app; CQRS/EDA: People; ES: theo F01. Đầu ra `requirement-matrix.md`: mỗi yêu cầu có project, slide, kịch bản và evidence path; không để mục ES chỉ ghi “có RabbitMQ”.
+- [ ] **A01 · P0 · Chốt ma trận đề bài → demo.** Scalability: Online Boutique/Locust; security: ScriptHammer/Codex audit; representation: Online Boutique; infrastructure: Bookinfo + Istio; MFE: fruit store; JAMstack: blog-starter-app; CQRS/EDA: People; ES: theo F01. Đầu ra `requirement-matrix.md`: mỗi yêu cầu có project, slide, kịch bản và evidence path; không để mục ES chỉ ghi “có RabbitMQ”.
 - [ ] **A02 · P0 · Chụp baseline runtime.** Lưu ngày/giờ, Docker/Compose version, danh sách project/container, health, CPU/RAM/disk, tool versions và port; kiểm tra HTTP read-only các app. Phân biệt “có source”, “có build”, “đã deploy”, “đang healthy”, “đã kiểm chứng nghiệp vụ”. Không lưu env/secret/PII trong evidence.
 - [ ] **A03 · P0 · Giải quyết xung đột tài nguyên.** People dùng MariaDB host port 3307; kiểm tra các dịch vụ khác trước khi khởi động. Mini Shop và ScriptHammer Kurrent web cùng mặc định 8080. Chọn port khác hoặc chạy theo lịch, kiểm tra URL/callback nếu đổi. Đầu ra bảng port + lịch demo và kiểm tra hai stack cần dùng đồng thời.
 - [ ] **A04 · P0 · Chốt bản JAMstack.** So sánh `blog-starter` và `blog-starter-app`, lockfile, dependency và content; chọn bản chính, giữ bản còn lại làm tham khảo. Cập nhật tình trạng README sau khi xác minh; không xóa source/volume để “dọn”.
@@ -75,10 +75,10 @@ Mỗi task chỉ đóng khi có artifact, cách tái hiện và người trình 
 
 ## D. Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana
 
-- [ ] **D01 · P1 · Viết 3–4 slide microservices + Docker.** Service theo capability, ownership, contract, independent deployment; so sánh monolith/modular monolith; container/image/volume/network, multi-stage build. Dùng Mini Shop đơn giản để giải thích rồi chuyển Online Boutique cho cluster.
+- [ ] **D01 · P1 · Viết 3–4 slide microservices + Docker.** Service theo capability, ownership, contract, independent deployment; so sánh monolith/modular monolith; container/image/volume/network, multi-stage build. Dùng Bookinfo đa ngôn ngữ (Python, Ruby, Java, Node.js) để giải thích kiến trúc polyglot trên cluster.
 - [ ] **D02 · P0 · Chuẩn bị cluster tái hiện được.** Chốt cluster local hoặc cluster đã có theo tài nguyên; cài tool còn thiếu; lưu version, node capacity, context, namespace và kế hoạch dừng. Kiểm tra CRD/API compatibility trước apply manifest; không mặc định đã có cluster vì source Kubernetes tồn tại.
-- [ ] **D03 · P1 · Deploy Online Boutique bản đã chọn.** Dùng release/Kustomize phù hợp local cluster; xác nhận Deployment/Service/probes/resources/endpoints, Redis và frontend truy cập được. Lưu manifests đã áp dụng, pod readiness và một giao dịch mẫu; liệt kê services tùy chọn thực sự bật.
-- [ ] **D04 · P1 · Mapping toàn bộ service nghiệp vụ.** Với mỗi dòng bảng Online Boutique trong inspection: API proto → server handler → client gọi → state/dependency → Deployment/Service/port/env. Deep dive frontend/cart/checkout/product catalog; payment/shipping/email ghi rõ mock.
+- [ ] **D03 · P1 · Deploy Bookinfo bản đã chọn.** Dùng `platform/kube/bookinfo.yaml` phù hợp local cluster; xác nhận Deployment (productpage-v1, details-v1, reviews-v1/v2/v3, ratings-v1), Service (ClusterIP 9080), Ingress Gateway và frontend productpage truy cập được. Lưu manifests đã áp dụng, pod readiness 2/2 với Envoy sidecar.
+- [ ] **D04 · P1 · Mapping toàn bộ service nghiệp vụ.** Với mỗi microservice trong Bookinfo: HTTP REST endpoint → handler source code → client gọi downstream → Deployment/Service/port/env. Deep dive `productpage` (Python/Flask), `details` (Ruby), `reviews` (Java Liberty v1/v2/v3), `ratings` (Node.js).
 - [ ] **D05 · P1 · Viết 2–3 slide orchestration.** Pod/Deployment/ReplicaSet/Service/DNS, desired state/reconciliation, readiness/liveness/startup, requests/limits, rolling update, scaling; nếu demo HPA cần metrics source và requests hợp lệ. Không đồng nhất restart với HA dữ liệu.
 - [ ] **D06 · P1 · Demo lifecycle Kubernetes.** Scale một deployment, quan sát endpoints/pod count; xóa một pod để controller tạo lại; rolling update một thay đổi có thể rollback. Lưu trước/sau và tác động client. Khôi phục trạng thái baseline sau demo.
 - [ ] **D07 · P0 · Chốt và cài Istio mode/version.** Chọn sidecar hoặc ambient phù hợp tài nguyên; xác nhận `istiod` và data plane workload; ghi namespace labels/injection hoặc enrollment. `istioctl` tồn tại không đủ tiêu chí hoàn thành.
@@ -86,7 +86,7 @@ Mỗi task chỉ đóng khi có artifact, cách tái hiện và người trình 
 - [ ] **D09 · P1 · Demo mesh security và traffic control.** Xác nhận mTLS mode/chứng cứ proxy hoặc telemetry; thử policy allow/deny có kết quả client; giải thích timeout/retry và nguy cơ nhân request. Tách các tính năng mới bổ sung khỏi manifest upstream mặc định.
 - [ ] **D10 · P1 · Deploy Prometheus/Grafana.** Dùng addons làm điểm xuất phát, kiểm tra version phù hợp; cấu hình scrape, datasource và dashboard. Đầu ra target UP + query có dữ liệu + panel khớp. Nếu chỉ có mesh metric thì không tuyên bố đã có business metric/app CPU.
 - [ ] **D11 · P1 · Viết 2–3 slide observability.** Metrics/logs/traces khác nhau; counter/gauge/histogram; request rate, error ratio, latency histogram, label cardinality; dùng metric thực có và kiểm tra label trước viết PromQL. Một panel phải truy về được query và target nguồn.
-- [ ] **D12 · P1 · Demo end-to-end.** Browser → gateway/proxy → frontend → checkout/cart/catalog → Redis/dependency, đối chiếu log/metric; dùng request correlation/tracing nếu đã có, không giả định bật sẵn. Nối các bước với B07–B09 để giải thích bottleneck và scale.
+- [ ] **D12 · P1 · Demo end-to-end.** Browser → Istio Ingress Gateway → `productpage` → `details`/`reviews` → `ratings`, đối chiếu log/metric telemetry; Canary routing header `end-user: jason`, fault injection delay 7s, Pod self-healing và Grafana/Prometheus dashboard.
 
 ## E. Micro-Frontends và JAMstack
 
@@ -139,7 +139,7 @@ Dàn deck đề xuất 40–55 slide chính, điều chỉnh theo thời lượn
 | Mở đầu · 2 slide | Mục tiêu, ma trận 6 yêu cầu, hệ thống đã chọn và hiện trạng | A01/A02 |
 | Quality Attributes · 9–12 slide | Scenario, tactics, workload, số liệu trước/sau scale, security method/findings/limits | B01–B15 |
 | Architecture Representation · 7–9 slide | View vs notation, 4+1, schema, security/concurrency, component mapping | C01–C10 |
-| Microservices + infrastructure · 8–11 slide | Boundary/contract, Docker/K8s, mesh, monitoring, luồng checkout/failure | D01–D12 |
+| Microservices + infrastructure · 8–11 slide | Boundary/contract, Docker/K8s, mesh, monitoring, luồng Bookinfo polyglot/failure | D01–D12 |
 | MFE + JAMstack · 6–8 slide | Host/remotes/state, static pipeline, SSR comparison, build/deploy evidence | E01–E10 |
 | ES + CQRS + EDA · 8–11 slide | Nguồn sự thật, replay, read model, outbox/inbox, offsets, failure windows | F01–G06 |
 | Appendix | Lệnh demo, manifests, full schema, component cards, raw reports, glossary | Toàn bộ |

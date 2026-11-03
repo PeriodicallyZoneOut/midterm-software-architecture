@@ -8,7 +8,7 @@ Mỗi bạn tự phụ trách kiến thức, slide, thuyết trình, deploy, dem
 |---|---|---|---|
 | **Nhật Anh** | 1. Quality Attributes: Scalability và Security | Online Boutique + ScriptHammer | Load test có số liệu trước/sau scale; audit bảo mật có scope, code evidence, phân tích và giới hạn |
 | **Thế Anh** | 2. Architecture Representation | Online Boutique (open source đã có) | Tái dựng kiến trúc từ source/runtime; 4+1 Views + schema/data model, component mapping và diễn giải bằng chữ |
-| **Tường** | 3. Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana | Online Boutique + Istio/addons | Cluster, services, mesh, metrics và dashboard thực hoạt động; demo traffic/failure/recovery |
+| **Tường** | 3. Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana | Bookinfo + Istio/addons | Cluster, services, mesh, metrics và dashboard thực hoạt động; demo traffic/failure/recovery |
 | **Toàn** | 4. Micro-Frontends và JAMstack | Fruit Store + Next.js Blog Starter | Runtime composition và state flow; production prerender/build/rebuild và hosting đúng thực tế |
 | **Tú** | 5. Event Sourcing/CQRS và 6. EDA | People Profiles | Command/query, event source/replay, outbox/inbox, hai consumer độc lập và failure semantics |
 
@@ -71,18 +71,19 @@ Thế Anh có workload sơ đồ/mapping lớn hơn, dù không cần mesh/monit
 
 ## 6. Tường — Microservices và hạ tầng
 
-**Đã có:** source Boutique, Dockerfiles/manifests; source Istio với addons Prometheus/Grafana. Trạng thái kiểm kê trước đây chưa xác nhận cluster/mesh/monitoring vận hành.
+**Đã có:** source Bookinfo (Python, Ruby, Java, Node.js) và manifests Kubernetes (`platform/kube/bookinfo.yaml`); cấu hình Istio Ingress Gateway, VirtualServices và DestinationRules; source Istio với addons Prometheus/Grafana.
 
-**Phải tự deploy:** cluster riêng của Tường, Boutique, Istio theo mode/version đã chốt, Prometheus và Grafana. Tường tự cấu hình datasource/dashboard và thu metric của deployment này.
+**Phải tự deploy:** cluster riêng của Tường, Bookinfo, Istio theo mode/version đã chốt, Prometheus và Grafana. Tường tự cấu hình datasource/dashboard và thu metric của deployment này.
 
-- [ ] Giải thích service boundary, ownership, gRPC contract và luồng checkout; map từng dịch vụ được bật vào source và Deployment/Service.
-- [ ] Deploy Boutique, xác nhận readiness và giao dịch mẫu; ghi requests/limits và dependency Redis.
+- [ ] Giải thích service boundary, ownership, HTTP REST contracts và luồng gọi downstream (`productpage` -> `details`/`reviews` -> `ratings`); map từng dịch vụ được bật vào source và Deployment/Service.
+- [ ] Deploy Bookinfo, xác nhận readiness và các phiên bản reviews (v1 không sao, v2 sao đen, v3 sao đỏ); kiểm tra cân bằng tải mặc định của Kubernetes.
 - [ ] Demo Pod self-heal hoặc rolling update, scale một workload và xác nhận client còn hoạt động; biết rollback/recovery.
-- [ ] Deploy mesh, phân biệt control/data plane và sidecar/ambient; kiểm chứng routing và một control như mTLS/policy/timeout bằng hành vi thực tế.
-- [ ] Deploy Prometheus/Grafana, có scrape target UP, datasource hoạt động, query/panel có dữ liệu khớp traffic do mình tạo.
+- [ ] Deploy mesh, phân biệt control/data plane (`istiod` vs Envoy sidecars); kiểm chứng Canary routing theo HTTP header (`end-user: jason`), traffic shifting (50/50 hoặc 80/20) và fault injection (delay/abort) bằng hành vi thực tế.
+- [ ] Kiểm chứng cơ chế Transparent mTLS với SPIFFE ID và chính sách `PeerAuthentication` STRICT.
+- [ ] Deploy Prometheus/Grafana, có scrape target UP (cổng `:15090/stats/prometheus`), datasource hoạt động, query/panel có dữ liệu khớp traffic do mình tạo.
 - [ ] Demo thành công khi đi được browser → services/proxies → dependency và giải thích metric nguồn nào, cảnh nào là lỗi/recovery. Không chỉ đưa manifest hoặc dashboard rỗng.
 
-**Phân biệt với Nhật Anh:** không phải lặp lại full load benchmark/security audit; traffic chỉ cần đủ chứng minh routing/metrics và hành vi hệ thống.
+**Phân biệt với Nhật Anh:** Nhật Anh phụ trách Quality Attributes (Scalability/Security với Boutique & ScriptHammer); Tường tập trung chứng minh tính năng hạ tầng điều phối (K8s), Service Mesh (Istio), và Observability (Prometheus/Grafana) qua Bookinfo.
 
 ## 7. Toàn — Micro-Frontends và JAMstack
 

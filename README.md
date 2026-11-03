@@ -8,7 +8,7 @@ Repo chuẩn bị vấn đáp giữa kỳ: kiến thức trên slide, demo và c
 |---|---|
 | [Quality Attributes](topics/01-quality-attributes/README.md) | Online Boutique, ScriptHammer, Mini Shop |
 | [Architecture Representation](topics/02-architecture-representation/README.md) | Mini Shop |
-| [Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana](topics/03-microservices-infrastructure/README.md) | Online Boutique, Istio |
+| [Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana](topics/03-microservices-infrastructure/README.md) | Bookinfo, Istio |
 | [Micro-Frontends và JAMstack](topics/04-micro-frontends-jamstack/README.md) | Micro Frontend Fruit Store, Next.js Blog Starter |
 | [Event Sourcing và CQRS](topics/05-event-sourcing-cqrs/README.md) | People Profiles |
 | [Event-Driven Architecture](topics/06-event-driven-architecture/README.md) | People Profiles |

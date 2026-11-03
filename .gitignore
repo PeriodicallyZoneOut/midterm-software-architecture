@@ -1,4 +1,6 @@
-# Local configuration and credentials
+# ==============================================================================
+# Security, Local Configuration & Credentials
+# ==============================================================================
 .env
 .env.*
 !.env.example
@@ -7,19 +9,130 @@
 .aws/
 *.pem
 *.key
-# Dependencies / build output / runtime data
+
+# ==============================================================================
+# Operating System Files
+# ==============================================================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# Linux / Temporary backup files
+*~
+*.swp
+*.swo
+
+# ==============================================================================
+# IDEs and Code Editors
+# ==============================================================================
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-workspace
+*.sublime-project
+
+# ==============================================================================
+# Node.js, Web & Micro-Frontends
+# ==============================================================================
 node_modules/
+.npm/
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 .next/
 dist/
-coverage/
-playwright-report/
-test-results/
+out/
+.turbo/
+
+# ==============================================================================
+# Python (Productpage, Email, Recommendation services)
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.coverage
+
+# ==============================================================================
+# Java & Gradle (Reviews, Ad services)
+# ==============================================================================
+.gradle/
+build/
+*.class
+*.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+!**/gradle-wrapper.jar
+*.war
+*.ear
+.project
+.classpath
+.settings/
+
+# ==============================================================================
+# .NET / C# (Cartservice, Messaging services)
+# ==============================================================================
+**/[Bb]in/[Dd]ebug/
+**/[Bb]in/[Rr]elease/
+**/[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ==============================================================================
+# Ruby (Details service)
+# ==============================================================================
+.bundle/
+vendor/bundle/
+
+# ==============================================================================
+# Databases, Caches & Runtime Logs
+# ==============================================================================
 .mariadb/
 *.pid
 *.sock
 *.log
-.DS_Store
+*.rdb
 
-# Copied local cluster runtime and access configuration
+# ==============================================================================
+# Test, Coverage & Reporting
+# ==============================================================================
+coverage/
+playwright-report/
+test-results/
+.nyc_output/
+
+# ==============================================================================
+# Local Kubernetes, Demo Runtime & Cluster Configs
+# ==============================================================================
 .local-demo/runtime/
 .local-demo/kubeconfig
+*.kubeconfig
+kubeconfig
+
+# ==============================================================================
+# Temporary & Cache Directories
+# ==============================================================================
+.cache/
+tmp/
+temp/
+*.tmp
