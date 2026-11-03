@@ -1,0 +1,29 @@
+{
+  "name": "kien-truc-micro-frontend-tieng-viet",
+  "template_path": "base_template.pptx",
+  "content_layout_catalog_path": "content_layout_catalog.json",
+  "archetypes_catalog_path": "archetypes.json",
+  "primary_color_hex": "77C6FC",
+  "text_color_dark": "3D3D3D",
+  "text_color_light": "FFFFFF",
+  "default_font_size_pt": 13,
+  "min_font_size_pt": 9,
+  "max_font_size_pt": 48,
+  "allowed_fonts": [
+    "Aptos"
+  ],
+  "min_margin_in": 0.1,
+  "enforce_template_geometry": false,
+  "enforce_template_placeholders": false,
+  "require_source_for_data_slides": true,
+  "require_visual_on_content_slides": true,
+  "asset_roots": [
+    "assets",
+    "project",
+    "output"
+  ],
+  "slide_margin_left_in": 1.2,
+  "slide_margin_right_in": 1.2,
+  "slide_margin_top_in": 1.5,
+  "slide_margin_bottom_in": 0.55
+}

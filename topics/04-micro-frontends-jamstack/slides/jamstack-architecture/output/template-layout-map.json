@@ -1,0 +1,177 @@
+[
+  {
+    "trang": 1,
+    "bo_cuc_goc": "TITLE",
+    "tieu_de": "Kiến trúc JAMstack — ScriptHammer"
+  },
+  {
+    "trang": 2,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "JAMstack tách giao diện dựng sẵn khỏi API"
+  },
+  {
+    "trang": 3,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Luồng dựng và luồng sử dụng diễn ra khác lúc"
+  },
+  {
+    "trang": 4,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "JAM không giới hạn ứng dụng ở nội dung tĩnh"
+  },
+  {
+    "trang": 5,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Dựng sẵn đổi chi phí máy chủ thành chi phí tích hợp"
+  },
+  {
+    "trang": 6,
+    "bo_cuc_goc": "SECTION_HEADER",
+    "tieu_de": "Từ JAMstack đến ScriptHammer"
+  },
+  {
+    "trang": 7,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "ScriptHammer ghép nội dung với nghiệp vụ động"
+  },
+  {
+    "trang": 8,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Trình duyệt kết nối frontend tĩnh với backend"
+  },
+  {
+    "trang": 9,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Cấu hình và mã xác nhận frontend được xuất tĩnh"
+  },
+  {
+    "trang": 10,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Bốn chế độ khác nhau ở thời điểm tạo HTML"
+  },
+  {
+    "trang": 11,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Blog đi qua JSON trước khi sinh HTML tĩnh"
+  },
+  {
+    "trang": 12,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Nội dung mới cần sinh dữ liệu và phát hành lại"
+  },
+  {
+    "trang": 13,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Mô hình 4+1 tách năm câu hỏi về hệ thống"
+  },
+  {
+    "trang": 14,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Góc nhìn logic phân chia giao diện và nghiệp vụ"
+  },
+  {
+    "trang": 15,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Quyền truy cập được thực thi ở backend"
+  },
+  {
+    "trang": 16,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Góc nhìn phát triển có ba nhóm đầu ra riêng"
+  },
+  {
+    "trang": 17,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Pipeline kiểm tra tệp trước khi phát hành lên Pages"
+  },
+  {
+    "trang": 18,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Đăng nhập diễn ra qua API từ trình duyệt"
+  },
+  {
+    "trang": 19,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Nội dung tin nhắn được mã hóa trước khi gửi"
+  },
+  {
+    "trang": 20,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Ngoại tuyến cần hàng đợi và chính sách đồng bộ"
+  },
+  {
+    "trang": 21,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Webhook xác nhận thanh toán; URL trả về chỉ hỗ trợ UI"
+  },
+  {
+    "trang": 22,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Góc nhìn vật lý tách nơi dựng khỏi nơi thực thi"
+  },
+  {
+    "trang": 23,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Frontend, schema và secrets có vòng đời khác nhau"
+  },
+  {
+    "trang": 24,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Kịch bản kiểm tra kiến trúc qua hành vi người dùng"
+  },
+  {
+    "trang": 25,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Kịch bản thanh toán nối đủ bốn góc nhìn"
+  },
+  {
+    "trang": 26,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Độ bền phụ thuộc cache, API và cơ chế thử lại"
+  },
+  {
+    "trang": 27,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Bảo mật đòi hỏi nhiều ranh giới phối hợp"
+  },
+  {
+    "trang": 28,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Đổi provider chưa tách hết phụ thuộc backend"
+  },
+  {
+    "trang": 29,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Các quyết định chuyển trách nhiệm sang API và client"
+  },
+  {
+    "trang": 30,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Cải tiến nên củng cố các ranh giới đã có"
+  },
+  {
+    "trang": 31,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Trình diễn cần thử cả frontend tĩnh và backend"
+  },
+  {
+    "trang": 32,
+    "bo_cuc_goc": "MAIN_POINT",
+    "tieu_de": "Frontend tĩnh không làm mất backend hoặc độ phức tạp"
+  },
+  {
+    "trang": 33,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Tài liệu gốc hỗ trợ các khái niệm kiến trúc"
+  },
+  {
+    "trang": 34,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Bản đồ nguồn phân biệt tài liệu với triển khai thật"
+  },
+  {
+    "trang": 35,
+    "bo_cuc_goc": "CUSTOM_9",
+    "tieu_de": "Cảm ơn!"
+  }
+]

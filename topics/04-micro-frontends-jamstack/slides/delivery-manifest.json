@@ -1,0 +1,36 @@
+{
+  "inspection_date": "2026-11-03",
+  "agent_slides_commit": "820782a5fb8cb8f251d7c0750e4299c321cd068c",
+  "template_sha256": "635dc64ea8a6cd2adea11670aa259e376fa8f3e0c5490fcf471d9d2c06776a9f",
+  "decks": [
+    {
+      "file": "micro-frontend-architecture/output/micro-frontend-architecture.pdf",
+      "workspace_file": "micro-frontend-architecture/output/micro-frontend-architecture.pdf",
+      "slides": 30,
+      "sha256": "4e6ba6dd044f69b35c95170b301cbd61f5c7ee4ea26d47e85fe5f325e297ae01",
+      "bytes": 589225
+    },
+    {
+      "file": "micro-frontend-architecture/output/micro-frontend-architecture.pptx",
+      "workspace_file": "micro-frontend-architecture/output/micro-frontend-architecture.pptx",
+      "slides": 30,
+      "sha256": "15d08fdbd7275b066b1f70bcad4893cfa985432440ec50177e3202e8887da470",
+      "bytes": 2572987
+    },
+    {
+      "file": "jamstack-architecture/output/jamstack-architecture.pdf",
+      "workspace_file": "jamstack-architecture/output/jamstack-architecture.pdf",
+      "slides": 35,
+      "sha256": "d51036aab523ee1c253aad2e17697a5ead2a99cc833695be642831f6d7290607",
+      "bytes": 600070
+    },
+    {
+      "file": "jamstack-architecture/output/jamstack-architecture.pptx",
+      "workspace_file": "jamstack-architecture/output/jamstack-architecture.pptx",
+      "slides": 35,
+      "sha256": "f1ef6ce0c7a04c6334dc6af3dd52255f11dfa0e187de31f5f325ac7212dd7600",
+      "bytes": 1745996
+    }
+  ],
+  "template_source": "jamstack-architecture/Technology Consulting  by Slidesgo.pptx"
+}
