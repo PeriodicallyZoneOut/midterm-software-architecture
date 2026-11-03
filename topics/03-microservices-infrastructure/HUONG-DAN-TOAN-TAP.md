@@ -28,8 +28,17 @@ topics/03-microservices-infrastructure/
 ├── HUONG-DAN-TOAN-TAP.md                      # Cẩm nang toàn diện vấn đáp & thực hành
 ├── setup-and-run.ps1                          # Script tự động triển khai K8s, Bookinfo, Mesh, Monitoring
 ├── slides/
-│   ├── slides.md                              # BỘ SLIDE THUYẾT TRÌNH ĐẦY ĐỦ 14 SLIDE (kèm bảng, code, mermaid)
-│   ├── outline.md                             # Dàn ý chi tiết 14 slide
+│   ├── 01-microservices.md                    # Slide độc lập 1: Microservices (10 slide / 10 phút)
+│   ├── 02-docker.md                           # Slide độc lập 2: Docker & Multi-stage (10 slide / 10 phút)
+│   ├── 03-kubernetes.md                       # Slide độc lập 3: Kubernetes Orchestration (10 slide / 10 phút)
+│   ├── 04-istio.md                            # Slide độc lập 4: Istio Service Mesh (10 slide / 10 phút)
+│   ├── 05-prometheus.md                       # Slide độc lập 5: Prometheus Monitoring (10 slide / 10 phút)
+│   ├── 06-grafana.md                          # Slide độc lập 6: Grafana Dashboards (10 slide / 10 phút)
+│   ├── 07-bookinfo.md                         # Slide độc lập 7: Bookinfo Application (10 slide / 10 phút)
+│   ├── README.md                              # Hướng dẫn xuất và trình chiếu 7 bộ slide
+│   ├── slides.md                              # Bộ slide tổng hợp (tiếng Việt)
+│   ├── slides-en.md                           # Bộ slide tổng hợp dịch 100% tiếng Anh
+│   ├── outline.md                             # Dàn ý chi tiết slide
 │   └── speaker-notes.md                       # Lời thoại mẫu từng slide & mốc chuyển live demo
 └── projects/
     ├── bookinfo/                              # Hệ thống microservices đa ngôn ngữ chuẩn Istio
@@ -51,50 +60,34 @@ topics/03-microservices-infrastructure/
 
 ---
 
-## 2. Tóm tắt Toàn bộ Bộ Slide Thuyết trình (14 Slides)
+## 2. Tóm tắt Toàn bộ Bộ Slide Thuyết trình
 
-*Chi tiết toàn bộ xem tại file: [`slides/slides.md`](slides/slides.md)*
+> **Bộ 7 Slide Độc Lập Cho Từng Chủ Đề (10 trang / 10 phút mỗi chủ đề)**:
+> 1. [01-microservices.md](slides/01-microservices.md) · 2. [02-docker.md](slides/02-docker.md) · 3. [03-kubernetes.md](slides/03-kubernetes.md)
+> 4. [04-istio.md](slides/04-istio.md) · 5. [05-prometheus.md](slides/05-prometheus.md) · 6. [06-grafana.md](slides/06-grafana.md) · 7. [07-bookinfo.md](slides/07-bookinfo.md)  
+> *Chi tiết bản tổng hợp xem tại: [`slides/slides.md`](slides/slides.md) · [Bản tiếng Anh (slides-en.md)](slides/slides-en.md)*
 
-- **Slide 1: Tiêu đề & Đặt vấn đề**
-  - Đặt ra 4 câu hỏi: Giao tiếp liên dịch vụ thế nào để không nghẽn? Điều phối và tự phục hồi ra sao? Bảo mật mạng nội bộ chuẩn Zero Trust bằng cách nào? Giám sát phân tán thế nào?
-- **Slide 2: Monolith vs Modular Monolith vs Microservices**
-  - So sánh chi tiết về Runtime process, Database ownership, Blast radius, Khả năng mở rộng (Scale) và Độ phức tạp.
-  - Minh chứng tính chất **Polyglot** của Bookinfo (Python, Ruby, Java, Node.js).
-- **Slide 3: Service Boundaries & Domain Decomposition**
-  - Áp dụng Domain-Driven Design (DDD): Single Responsibility cho từng service (`productpage`, `details`, `reviews`, `ratings`).
-  - Trách nhiệm độc lập, ranh giới rõ ràng, không xâm lấn dữ liệu của nhau.
-- **Slide 4: Giao tiếp Liên Dịch vụ & Distributed Tracing Propagation**
-  - Giao tiếp qua HTTP REST/JSON.
-  - Lan truyền header tracing (`x-request-id`, `x-b3-traceid`, `end-user`) qua hàm `getForwardHeaders` trong `productpage.py` và JAX-RS trong `LibertyRestEndpoint.java`.
-- **Slide 5: Dockerization & Multi-stage Build**
-  - Linux kernel primitives: Cgroups (giới hạn CPU/RAM) và Namespaces (cách ly PID, Network, Mount).
-  - Phân tích `src/reviews/Dockerfile`: Dùng Multi-stage build rút gọn image từ >800MB (Gradle + JDK) xuống còn ~150MB (Liberty kernel slim runtime).
-- **Slide 6: Kubernetes Workload Modeling**
-  - Các khái niệm trừu tượng: Pod (chứa App + Envoy sidecar), Deployment, ReplicaSet, ClusterIP Service.
-  - Phân tách phiên bản qua nhãn: `app: reviews` dùng chung, phân biệt bằng `version: v1`, `version: v2`, `version: v3`.
-- **Slide 7: Kubernetes Self-healing & Rolling Update**
-  - Cơ chế Reconciliation Loop của ReplicaSet tự động phát hiện và bù đắp Pod bị xóa trong 2 giây.
-  - Quy trình Zero-downtime Rolling Update: Khởi tạo Pod v mới song song, pass readiness probe mới route traffic, gửi `SIGTERM` dừng Pod cũ.
-- **Slide 8: Service Mesh Architecture & Istio**
-  - Lý do ra đời: Tách biệt logic mạng (mTLS, retry, timeout, telemetry, canary routing) ra khỏi mã nguồn ứng dụng.
-  - Kiến trúc: **Control Plane (`istiod`)** quản lý cấu hình và cấp chứng chỉ; **Data Plane (Envoy Sidecar)** can thiệp L4/L7 traffic trong từng Pod.
-- **Slide 9: Traffic Management & Canary Routing**
-  - Các CRD cốt lõi: `Gateway`, `VirtualService`, `DestinationRule`.
-  - Kịch bản Canary Deployment: Định tuyến theo HTTP header `end-user: jason` vào `reviews:v2` (sao đen) và phân chia tải 50/50 vào `reviews:v3` (sao đỏ).
-- **Slide 10: Service Mesh Security: Zero Trust & Transparent mTLS**
-  - Triết lý Zero Trust: Không tin tưởng mạng nội bộ cluster.
-  - Cơ chế Transparent mTLS: Tự động bắt tay TLS giữa 2 Envoy sidecar, xác thực danh tính qua SPIFFE ID. Chế độ `PeerAuthentication` STRICT ngăn chặn kết nối không có proxy.
-- **Slide 11: Cloud-Native Observability & 4 Golden Signals**
-  - 3 trụ cột: **Metrics** (Phát hiện lỗi nhanh), **Logs** (Bản ghi chi tiết ngữ cảnh), **Traces** (Dấu vết hành trình phân tán).
-  - 4 Golden Signals của Google SRE: Latency, Traffic, Errors, Saturation.
-- **Slide 12: Prometheus Architecture & PromQL**
-  - Mô hình Pull-based định kỳ cào số liệu từ cổng `:15090/stats/prometheus` của Envoy.
-  - Câu lệnh PromQL đo lường thực tế: Đo RPS hệ thống, tỉ lệ phản hồi 200/500, và độ trễ P95 của dịch vụ `productpage`.
-- **Slide 13: Grafana Dashboard & Kịch bản Demo**
-  - Trực quan hóa dữ liệu telemetry qua Istio Mesh & Service Dashboards.
-  - Sơ đồ 5 bước Demo thực tế trên máy tính (Web -> Canary -> Fault Injection -> Self-healing -> Grafana).
-- **Slide 14: Tổng kết & Architectural Trade-offs**
-  - Bảng đánh đổi đa chiều: Scalability & Tech Agility đối trọng với chi phí Hop Latency (+1.5–3ms), Overhead RAM/CPU của sidecar, và độ phức tạp vận hành SRE.
+- **Slide 1: Đặt Vấn Đề & Chuyển Dịch Sang Cloud-Native**
+  - 4 câu hỏi hạ tầng: Giao tiếp mạng đa ngôn ngữ, tự phục hồi cụm K8s, bảo mật Zero Trust liên Pod, và giám sát phân tán.
+- **Slide 2: Kiến Trúc Microservices & Tính Chất Polyglot**
+  - Bảng so sánh 6 tiêu chí: Monolith vs Modular Monolith vs Microservices.
+  - Minh chứng Polyglot 4 ngôn ngữ trong Bookinfo: Python (`productpage`), Ruby (`details`), Java (`reviews`), Node.js (`ratings`).
+- **Slide 3: Phân Rã Domain (DDD) & Code Mapping trong Bookinfo**
+  - Single Responsibility & Bounded Contexts. Code mapping `LibertyRestEndpoint.java`: 12-Factor App điều khiển v1/v2/v3 qua biến môi trường.
+- **Slide 4: Giao Tiếp Liên Dịch Vụ & Lan Truyền Tracing Headers**
+  - Phân tích hàm `getForwardHeaders` trong `productpage.py`: forward `end-user` (cho Envoy L7 routing) và `x-request-id`, `x-b3-*` (cho distributed tracing).
+- **Slide 5: Containerization & Docker Multi-Stage Build**
+  - Namespaces/Cgroups; phân tích `src/reviews/Dockerfile`: Stage 1 Gradle builder ➔ Stage 2 Liberty slim runtime, giảm 800MB xuống 150MB, thu hẹp bề mặt tấn công.
+- **Slide 6: Kubernetes Workload Modeling & Label Selectors**
+  - Pod `2/2 Running` (App + Envoy sidecar); Service ClusterIP `reviews:9080`; Label Selectors `version: v1/v2/v3`; Cân bằng tải L4 mặc định Round-Robin.
+- **Slide 7: Kubernetes Self-Healing & Zero-Downtime Deployment**
+  - Vòng lặp đối soát (Reconciliation Loop); kill Pod `details` tự sinh lại trong 1.8s; Rolling update với `readinessProbe` và `SIGTERM`.
+- **Slide 8: Istio Service Mesh & Quản Trị Luồng (Canary Routing)**
+  - Control Plane `istiod` vs Data Plane Envoy sidecar; Bộ ba CRD `Gateway`, `VirtualService`, `DestinationRule`; Canary routing header `end-user: jason`.
+- **Slide 9: Bảo Mật Zero Trust Với Transparent mTLS**
+  - SPIFFE ID; SDS cấp và xoay vòng chứng chỉ X.509; Transparent mTLS liên Pod; `PeerAuthentication` STRICT loại bỏ plaintext.
+- **Slide 10: Giám Sát Prometheus & Grafana + Đánh Đổi Kiến Trúc**
+  - Prometheus pull `:15090`; PromQL đo RPS và độ trễ P95; Grafana Dashboards; Bảng đánh đổi Hop Latency (+1.5-3ms) và RAM overhead (30-50MB/pod).
 
 ---
 
@@ -102,20 +95,20 @@ topics/03-microservices-infrastructure/
 
 *Chi tiết toàn bộ xem tại file: [`slides/speaker-notes.md`](slides/speaker-notes.md)*
 
-### Phân bổ thời gian (Tổng cộng 12–15 phút):
-1. **Phần 1: Lý thuyết Kiến trúc (5 phút — Slides 1 đến 7)**:
-   - Đặt vấn đề, so sánh Monolith vs Microservices.
-   - Giới thiệu Bookinfo: Hệ thống Polyglot gồm Python, Ruby, Java, Node.js.
-   - Phân tích cơ chế Header propagation phục vụ tracing và routing.
-   - Phân tích Docker Multi-stage build và Kubernetes Workloads (Pod, Deployment, Service).
-2. **Phần 2: Hạ tầng Service Mesh & Observability (4 phút — Slides 8 đến 14)**:
-   - Kiến trúc Istio: Control plane `istiod` vs Data plane Envoy.
-   - Quản trị luồng thông minh với Gateway, VirtualService, DestinationRule.
-   - Bảo mật Zero Trust với mTLS tự động và SPIFFE ID.
-   - Giám sát 4 Golden Signals với Prometheus và Grafana.
-   - Phân tích các đánh đổi kiến trúc (Trade-offs).
-3. **Phần 3: Live Demo Thực tế trên Máy tính (5 phút)**:
-   - Thực hiện trực tiếp 5 kịch bản theo [CHEAT-SHEET-CMD.md](CHEAT-SHEET-CMD.md).
+### Phân bổ thời gian (Tổng cộng ĐÚNG 10 PHÚT):
+1. **Phần 1: Báo cáo Slide & Phân tích Code (6.0 phút — Từ 0:00 đến 6:00)**:
+   - Đặt vấn đề & So sánh Monolith vs Microservices (0:00 - 1:00).
+   - Domain Bounded Context & Cơ chế Header Forwarding trong code (1:00 - 2:00).
+   - Docker Multi-stage build & Kubernetes Workloads (Pod 2/2, Reconciliation Loop) (2:00 - 3:30).
+   - Istio Mesh (Control Plane `istiod` vs Data Plane Envoy), Canary Routing & Zero Trust mTLS (3:30 - 5:00).
+   - Observability với Prometheus PromQL & Grafana, phân tích Trade-offs (5:00 - 6:00).
+2. **Phần 2: Live Demo Thực tế trên Máy tính (3.5 phút — Từ 6:00 đến 9:30)**:
+   - Demo 1 (0.5p): Web Bookinfo & Cân bằng tải Round-Robin L4 mặc định.
+   - Demo 2 (1.5p): Canary Routing theo Header user `jason` (thấy sao đen v2).
+   - Demo 3 (1.0p): Kubernetes Pod Self-Healing (kill Pod `details`, tái sinh trong 1.8s, zero downtime).
+   - Demo 4 (0.5p): Bơm tải & quan sát đồ thị RPS, P95 Latency trên Grafana.
+3. **Phần 3: Kết bài & Chuyển sang Vấn đáp (0.5 phút — Từ 9:30 đến 10:00)**:
+   - Tóm lược giá trị kiến trúc và mời Thầy/Cô đặt câu hỏi.
 
 ---
 

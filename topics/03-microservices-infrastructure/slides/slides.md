@@ -1,199 +1,169 @@
-# Slide Deck: Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana
+# Bộ Slide Thuyết Trình Chuẩn: 10 Slide Trong 10 Phút
 
-> **Chủ đề 3**: Kiến trúc Microservices & Hạ tầng Cloud-Native  
-> **Người báo cáo**: Tường  
-> **Hệ thống minh chứng**: [Bookinfo](../../projects/bookinfo/README.md) & [Istio Service Mesh](../../projects/istio/README.md)  
-> **Tài liệu thuyết trình kèm theo**: [Dàn ý chi tiết (outline.md)](outline.md) · [Lời thoại thuyết trình (speaker-notes.md)](speaker-notes.md) · [Cẩm nang toàn tập (HUONG-DAN-TOAN-TAP.md)](../HUONG-DAN-TOAN-TAP.md)
+> **Chủ đề 3**: Kiến trúc Microservices & Hạ tầng Cloud-Native (Bộ Chuẩn 10 Slides)  
+> **Các công nghệ cốt lõi**: Microservices, Docker, Kubernetes, Istio, Prometheus, Grafana, Bookinfo  
+> **Người báo cáo**: Tường — Báo cáo Giữa kỳ Kiến trúc Phần mềm  
+> **Tài liệu kèm theo**: [Slide tiếng Anh (slides-en.md)](slides-en.md) · [Lời thoại 10 phút (speaker-notes.md)](speaker-notes.md)
 
 ---
 
-## Slide 1: Trang tiêu đề & Đặt vấn đề
+## Slide 1: Đặt Vấn Đề & Chuyển Dịch Sang Cloud-Native
 
 ### Tiêu đề:
 **MICROSERVICES & CLOUD-NATIVE INFRASTRUCTURE**  
 *Thiết kế, Triển khai, Điều phối & Giám sát với Docker, Kubernetes, Istio, Prometheus & Grafana*
 
-### Thông tin báo cáo:
-- **Học phần**: Kiến trúc Phần mềm (Software Architecture) — Báo cáo Giữa kỳ
 - **Sinh viên thực hiện**: Tường
-- **Hệ thống thực nghiệm**: Bookinfo (Canonical Istio Polyglot Microservices Sample) + Istio Service Mesh & Observability Addons
+- **Hệ thống thực nghiệm**: Bookinfo (Canonical Istio Polyglot Microservices Sample)
 
-### Đặt vấn đề cốt lõi:
-1. Vì sao các hệ thống hiện đại chuyển dịch từ Monolith sang Microservices?
-2. Khi phân rã thành các dịch vụ độc lập, chúng ta giải quyết các bài toán hạ tầng sau bằng cách nào:
-   - **Giao tiếp mạng & Định tuyến phiên bản** (Polyglot Networking & Canary Routing).
-   - **Điều phối hạ tầng & Tự phục hồi** (Container Orchestration & Self-healing).
-   - **Bảo mật & Kiểm soát luồng mạng** (Service Mesh & Zero Trust Security).
-   - **Khả năng quan sát phân tán** (Distributed Observability & Telemetry).
+### 4 Thách thức Hạ tầng Sống còn:
+1. **Giao tiếp Mạng & Định tuyến Phiên bản**: Điều phối lưu lượng L7 và phát hành Canary thế nào?
+2. **Điều phối & Tự phục hồi (Kubernetes)**: Đảm bảo zero-downtime và tự động bù đắp lỗi ra sao?
+3. **Bảo mật Mạng Nội bộ (Zero Trust)**: Mã hóa liên Pod bằng mTLS mà không sửa code ứng dụng bằng cách nào?
+4. **Khả năng Quan sát (Prometheus & Grafana)**: Thu thập Golden Signals (RPS, Latency P95, Errors) tập trung như thế nào?
 
 ---
 
-## Slide 2: So sánh Kiến trúc — Monolith vs Modular Monolith vs Microservices
+## Slide 2: Kiến Trúc Microservices & Tính Chất Polyglot
 
-### 1. Bảng so sánh 3 mô hình kiến trúc
+### 1. Bảng Đối Chiếu: Monolith vs Modular Monolith vs Microservices
 
-| Tiêu chí | Monolith | Modular Monolith | Microservices |
+| Tiêu chí | Monolith | Modular Monolith | Microservices (Bookinfo) |
 |---|---|---|---|
-| **Cấu trúc Runtime** | 1 process duy nhất chạy toàn bộ logic | 1 process duy nhất nhưng chia rõ package/module | Mỗi service là một process riêng (Container) |
-| **Cơ sở dữ liệu** | 1 Database dùng chung (Shared DB) | Thường 1 DB, phân schema theo module | Độc lập theo từng dịch vụ |
-| **Công nghệ** | Đồng nhất 1 ngôn ngữ/framework | Đồng nhất 1 ngôn ngữ | **Polyglot** (đa dạng ngôn ngữ, tối ưu theo tác vụ) |
-| **Blast Radius (Phạm vi ảnh hưởng)** | Rất lớn: Lỗi ở 1 module có thể làm crash toàn bộ app | Lớn: Lỗi runtime vẫn làm dừng process | Nhỏ: Lỗi được cô lập trong ranh giới service |
-| **Khả năng mở rộng (Scale)** | Scale toàn bộ ứng dụng cồng kềnh | Scale toàn bộ process | Scale linh hoạt và có chọn lọc theo từng service |
-| **Độ phức tạp vận hành** | Thấp (Deploy đơn giản) | Trung bình | **Cao** (Đòi hỏi K8s, Mesh, Observability) |
+| **Cấu trúc Runtime** | 1 process duy nhất chạy toàn bộ | 1 process duy nhất, phân chia module | Mỗi service là 1 container/process độc lập |
+| **Cơ sở Dữ liệu** | 1 Shared Database tập trung | 1 Shared DB, phân schema | **Database-per-service** độc lập |
+| **Công nghệ** | Đồng nhất 1 ngôn ngữ/framework | Đồng nhất 1 ngôn ngữ | **Polyglot**: Tối ưu tech stack theo domain |
+| **Blast Radius** | Rất lớn: Lỗi 1 module sập cả app | Lớn: Lỗi runtime dừng cả process | **Nhỏ**: Lỗi được cô lập trong từng service |
+| **Khả năng Scale** | Scale toàn bộ ứng dụng cồng kềnh | Scale toàn bộ binary | **Linh hoạt**: Scale riêng lẻ từng service nghẽn |
+| **Độ phức tạp** | Thấp (Deploy đơn giản) | Trung bình | **Cao** (Đòi hỏi K8s, Mesh, Observability) |
 
-### 2. Kiến trúc Bookinfo (Minh chứng Polyglot Hoàn hảo)
-- **Python (Flask)**: `productpage` (thuận tiện cho việc tổng hợp dữ liệu và render giao diện người dùng Jinja2).
-- **Ruby (WEBrick/Sinatra)**: `details` (xử lý metadata sách nhanh chóng, cú pháp linh hoạt).
-- **Java (Open Liberty / JAX-RS)**: `reviews` (nền tảng enterprise vững chắc, hỗ trợ đa phiên bản v1, v2, v3).
-- **Node.js (Express)**: `ratings` (I/O bất đồng bộ nhẹ nhàng, tối ưu cho việc truy xuất điểm số đánh giá).
-
----
-
-## Slide 3: Service Boundaries & Domain Decomposition trong Bookinfo
-
-### 1. Phân rã theo Domain-Driven Design (DDD)
-- Mỗi microservice trong Bookinfo đảm nhận một năng lực nghiệp vụ duy nhất (**Single Responsibility**):
-  - **`productpage`**: Điểm tiếp nhận request từ khách hàng, điều phối gọi các dịch vụ downstream để hiển thị trang sách.
-  - **`details`**: Cung cấp thông tin xuất bản của cuốn sách (thể loại, số trang, nhà xuất bản, ISBN).
-  - **`reviews`**: Cung cấp các bài bình luận của độc giả.
-  - **`ratings`**: Cung cấp số điểm đánh giá (sao) đi kèm mỗi bài bình luận.
-
-### 2. Sơ đồ Luồng Tương tác Dữ liệu:
-```mermaid
-flowchart LR
-    Browser(["Client Browser"]) -->|HTTP GET /productpage| PP["productpage (Python)"]
-    PP -->|GET /details/0| Det["details (Ruby)"]
-    PP -->|GET /reviews/0| Rev["reviews (Java v1/v2/v3)"]
-    Rev -.->|GET /ratings/0| Rat["ratings (Node.js)"]
-```
-- **Tính độc lập phát triển**: Nhóm phát triển `reviews` có thể deploy phiên bản v3 (sao đỏ) hoàn toàn độc lập mà nhóm `details` không cần phải build hay deploy lại bất kỳ thành phần nào.
+### 2. Minh Chứng Polyglot trong Bookinfo:
+- **Python (Flask)**: `productpage` — Xử lý giao diện web Jinja2 và tổng hợp API.
+- **Ruby (WEBrick/Sinatra)**: `details` — Xử lý metadata xuất bản sách linh hoạt.
+- **Java (Open Liberty)**: `reviews` — Xử lý nghiệp vụ bình luận đa phiên bản (v1, v2, v3).
+- **Node.js (Express)**: `ratings` — Non-blocking I/O phục vụ tra cứu điểm số đánh giá.
 
 ---
 
-## Slide 4: Giao tiếp Liên Dịch vụ & Lan truyền Tracing Headers
+## Slide 3: Phân Rã Domain (DDD) & Code Mapping trong Bookinfo
 
-### 1. Giao thức HTTP REST/JSON & Vấn đề Distributed Tracing
-- Các microservice trong Bookinfo giao tiếp qua giao thức HTTP REST/JSON.
-- Khi một request từ người dùng đi qua chuỗi `productpage` -> `reviews` -> `ratings`, nếu có lỗi hoặc độ trễ phát sinh, làm sao để liên kết các log và trace của 3 container khác nhau?
+### 1. Bounded Context & Single Responsibility Principle (DDD):
+- **`productpage`**: API Aggregator, điều phối hiển thị trang sách.
+- **`details`**: Quản lý thông tin sách (thể loại, số trang, nhà xuất bản, ISBN).
+- **`reviews`**: Quản lý bình luận độc giả với 3 phiên bản đồng thời:
+  - *v1*: Bình luận thuần text, không có sao.
+  - *v2*: Gọi `ratings`, hiển thị 1-5 sao màu đen (`STAR_COLOR=black`).
+  - *v3*: Gọi `ratings`, hiển thị 1-5 sao màu đỏ (`STAR_COLOR=red`).
+- **`ratings`**: Quản lý điểm số sao, hỗ trợ kết nối DB MySQL/MongoDB.
 
-### 2. Cơ chế Lan truyền Header (`getForwardHeaders` trong `productpage.py`)
+### 2. Code Mapping Thực Tế:
+- `src/productpage/productpage.py`: Flask router, hàm `getProducts()`, `getProductDetails()`, `getProductReviews()`.
+- `src/reviews/.../LibertyRestEndpoint.java`:
+  ```java
+  private final static Boolean ratings_enabled = Boolean.valueOf(System.getenv("ENABLE_RATINGS"));
+  private final static String star_color = System.getenv("STAR_COLOR") == null ? "black" : System.getenv("STAR_COLOR");
+  ```
+  *Triển khai chuẩn 12-Factor App: Chung 1 codebase Java, hành vi v1/v2/v3 cấu hình qua biến môi trường.*
+
+---
+
+## Slide 4: Giao Tiếp Liên Dịch Vụ & Lan Truyền Tracing Headers
+
+### 1. Thách thức Tracing trong Hệ Thống Phân Tán:
+- Request đi qua chuỗi: `Browser` ➔ `productpage` ➔ `reviews` ➔ `ratings`.
+- Nếu không có cơ chế chuyển tiếp ngữ cảnh (Context Propagation), chuỗi Distributed Trace sẽ đứt gãy và Envoy proxy không thể phân loại người dùng để định tuyến L7.
+
+### 2. Code Deep-Dive: Hàm `getForwardHeaders` trong `productpage.py`:
 ```python
 def getForwardHeaders(request):
     headers = {}
-    # Trích xuất và tiêm B3 tracing context qua OpenTelemetry
+    # 1. Trích xuất & tiêm B3 tracing context (OpenTelemetry)
     ctx = propagator.extract(carrier={k.lower(): v for k, v in request.headers})
     propagator.inject(headers, ctx)
 
-    # Chuyển tiếp danh tính người dùng phục vụ Canary Routing
+    # 2. Chuyển tiếp danh tính người dùng phục vụ Layer 7 Canary Routing
     if 'user' in session:
         headers['end-user'] = session['user']
 
-    # Chuyển tiếp request-id tiêu chuẩn của Istio Envoy
-    if 'x-request-id' in request.headers:
-        headers['x-request-id'] = request.headers['x-request-id']
-
+    # 3. Chuyển tiếp tracing headers chuẩn của Istio Envoy
+    for hdr in ['x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-sampled']:
+        if hdr in request.headers:
+            headers[hdr] = request.headers[hdr]
     return headers
 ```
-- **Ý nghĩa sống còn**: Header `end-user` giúp Envoy proxy nhận diện người dùng `jason` để định tuyến sang phiên bản `reviews:v2`. Header `x-request-id` và `x-b3-*` giúp kết nối toàn bộ hành trình request trên distributed tracing (Zipkin/Jaeger).
+- **Ý nghĩa sống còn**: Header `end-user: jason` là chìa khóa để Istio VirtualService định tuyến sang `reviews:v2`.
 
 ---
 
-## Slide 5: Dockerization & Multi-stage Build trong Bookinfo
+## Slide 5: Containerization & Docker Multi-Stage Build
 
-### 1. Nguyên lý Container hóa & Linux Kernel Primitives
-- **Namespaces**: Cung cấp môi trường cách ly (PID - tiến trình, NET - mạng, MNT - hệ thống file, IPC - bộ nhớ chia sẻ).
-- **Cgroups**: Áp đặt giới hạn trần tài nguyên (CPU limits, Memory limits) ngăn chặn một container làm cạn kiệt tài nguyên máy chủ vật lý.
+### 1. Nguyên Lý Container & Linux Kernel Primitives:
+- **Namespaces**: Cung cấp môi trường cách ly (PID - tiến trình, NET - card mạng riêng, MNT - hệ thống file).
+- **Cgroups**: Áp đặt giới hạn cứng CPU limits và Memory limits, ngăn ngừa hiện tượng "Noisy Neighbor".
 
-### 2. Phân tích Multi-stage Build trong `src/reviews/Dockerfile`
+### 2. Code Deep-Dive: Multi-Stage Build trong `src/reviews/Dockerfile`:
 ```dockerfile
-# Stage 1: Build bằng Gradle trên OpenJDK 8 Alpine
+# STAGE 1: Môi trường biên dịch (Gradle + OpenJDK 8 Alpine)
 FROM gradle:4.8.1-jdk8-alpine as builder
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src/reviews-wlpcfg
 RUN gradle build
 
-# Stage 2: Runtime Image cực kỳ nhỏ gọn
+# STAGE 2: Runtime Image tối giản cho Production
 FROM open-liberty:kernel-slim
-COPY --chown=1001:0 --from=builder /home/gradle/src/reviews-wlpcfg/build/libs/wlp/usr/servers/defaultServer /opt/ibm/wlp/usr/servers/defaultServer
+COPY --chown=1001:0 --from=builder \
+     /home/gradle/src/reviews-wlpcfg/build/libs/wlp/usr/servers/defaultServer \
+     /opt/ibm/wlp/usr/servers/defaultServer
 EXPOSE 9080
 ```
-- **Hiệu quả**: Loại bỏ hoàn toàn Gradle compiler và mã nguồn thô khỏi image cuối cùng. Giảm kích thước image từ >800MB xuống còn ~150MB, đồng thời giảm thiểu bề mặt tấn công bảo mật (Attack Surface).
+- **Tối ưu kích thước**: Giảm dung lượng image từ **>800MB** xuống còn **~150MB**.
+- **Tối ưu an ninh**: Loại bỏ hoàn toàn compiler, Gradle và mã nguồn gốc khỏi container runtime ➔ **Thu hẹp tối đa bề mặt tấn công (Attack Surface)**.
 
 ---
 
-## Slide 6: Kubernetes Workload Modeling trong Bookinfo
+## Slide 6: Kubernetes Workload Modeling & Label Selectors
 
-### 1. Mô hình hóa Tài nguyên trên Kubernetes
-- **Pod**: Đơn vị tính toán nhỏ nhất. Trong môi trường Service Mesh, mỗi Pod chứa **2 containers**:
-  1. Container ứng dụng nghiệp vụ (`productpage`, `details`, `reviews`, hoặc `ratings`).
-  2. Container `istio-proxy` (Envoy proxy) tiêm tự động qua Mutating Webhook.
-- **ClusterIP Service**: Cung cấp Virtual IP và DNS nội bộ ổn định (`http://reviews:9080`), cân bằng tải mức L4.
+### 1. Cấu Trúc Pod trong Service Mesh (`2/2 Running`):
+- Container 1: **App Container Nghiệp Vụ** (`productpage`, `details`, `reviews`, `ratings`).
+- Container 2: **Envoy Proxy Sidecar (`istio-proxy`)** được tự động tiêm qua Mutating Webhook.
 
-### 2. Quản lý Đa Phiên bản qua Label Selectors
-```text
-Service 'reviews' (Port 9080, Selector: app=reviews)
-    ├── Deployment 'reviews-v1' (Labels: app=reviews, version=v1) -> Pod: Không có sao
-    ├── Deployment 'reviews-v2' (Labels: app=reviews, version=v2) -> Pod: Gọi ratings (Sao đen)
-    └── Deployment 'reviews-v3' (Labels: app=reviews, version=v3) -> Pod: Gọi ratings (Sao đỏ)
-```
-- Mặc định, Kubernetes Service phân phối tải ngẫu nhiên (Round-Robin) giữa cả 3 Deployments. Khi kết hợp với Istio VirtualService, luồng tải sẽ được định tuyến thông minh theo nhu cầu.
-
----
-
-## Slide 7: Kubernetes Self-healing, Pod Scaling & Rolling Updates
-
-### 1. Cơ chế Tự phục hồi (Self-Healing)
-- Kubernetes duy trì một vòng lặp đối soát (**Reconciliation Loop**):
-  $$\text{Current State} \xrightarrow{\text{Compare}} \text{Desired State} \xrightarrow{\text{Action}} \text{Reconciled}$$
-- Khi một Pod (ví dụ `details-v1`) bị crash hoặc bị xóa cưỡng bức:
-  1. ReplicaSet Controller phát hiện số lượng Pod đang chạy (0) nhỏ hơn số lượng mong muốn (1).
-  2. Ngay lập tức gọi API Server để khởi tạo Pod mới trên Node khả dụng trong vòng 2 giây.
-
-### 2. Quy trình Rolling Update Không Gián Đoạn (Zero-Downtime)
-1. Tạo Pod mới phiên bản mới song song với Pod cũ.
-2. Kiểm tra `readinessProbe` thành công mới cho phép Pod mới gia nhập danh sách Service Endpoints.
-3. Gửi tín hiệu `SIGTERM` tới Pod cũ, chờ xử lý nốt các request dở dang rồi mới dừng hoàn toàn.
+### 2. Ánh Xạ Tài Nguyên trong `platform/kube/bookinfo.yaml`:
+- **ClusterIP Service**: Cung cấp Virtual IP và DNS nội bộ ổn định (`http://reviews:9080`).
+- **Label Selectors & Subsets**:
+  ```text
+  ClusterIP Service: reviews (Port 9080, Selector: app=reviews)
+      ├── Deployment 'reviews-v1' (version=v1) ──▶ Không sao
+      ├── Deployment 'reviews-v2' (version=v2) ──▶ Sao đen (gọi ratings)
+      └── Deployment 'reviews-v3' (version=v3) ──▶ Sao đỏ (gọi ratings)
+  ```
+- **Cân bằng tải L4 mặc định**: Khi chưa có Istio, Kubernetes Service tự động chia đều tải Round-Robin 33% cho mỗi version.
 
 ---
 
-## Slide 8: Kiến trúc Service Mesh & Istio
+## Slide 7: Kubernetes Self-Healing & Zero-Downtime Deployment
 
-### 1. Tại sao cần Service Mesh?
-- Khi số lượng microservices tăng lên, việc cài đặt thủ công mTLS, Retry, Circuit Breaker, và Telemetry vào code của 4 ngôn ngữ khác nhau (Python, Ruby, Java, Node.js) là bất khả thi và dễ sai sót.
-- **Service Mesh tách biệt hoàn toàn Logic Nghiệp vụ khỏi Logic Mạng Hạ tầng**.
+### 1. Cơ Chế Tự Phục Hồi (Self-Healing):
+- Kubernetes vận hành theo vòng lặp đối soát (**Reconciliation Loop**):
+  $$\text{Current State} \xrightarrow{\quad\text{Reconciliation Loop}\quad} \text{Desired State}$$
+- **Minh chứng thực nghiệm**: Khi xóa cưỡng bức Pod `details` (`kubectl delete pod -l app=details`), ReplicaSet Controller phát hiện sai lệch và tái sinh Pod mới đạt `Running (2/2)` chỉ trong **1.8 giây**.
+- Khách truy cập web không hề gặp lỗi kết nối (Zero Downtime).
 
-### 2. Kiến trúc 2 Tầng của Istio
-```mermaid
-flowchart TD
-    subgraph ControlPlane ["Control Plane (istiod)"]
-        Istiod["istiod<br/>(Pilot: Cấu hình Envoy<br/>Citadel: Cấp phát chứng chỉ x.509 mTLS)"]
-    end
-
-    subgraph DataPlane ["Data Plane (Envoy Sidecars)"]
-        subgraph PodA ["Pod productpage"]
-            AppA["productpage (Python)"] <-->|localhost| ProxyA["Envoy Sidecar (:15001/:15006)"]
-        end
-        subgraph PodB ["Pod reviews"]
-            ProxyB["Envoy Sidecar (:15001/:15006)"] <-->|localhost| AppB["reviews (Java)"]
-        end
-    end
-
-    Istiod -.->|xDS gRPC API: Push Config| ProxyA
-    Istiod -.->|xDS gRPC API: Push Config| ProxyB
-    ProxyA <==>|Mutual TLS (mTLS) + SPIFFE ID| ProxyB
-```
+### 2. Quy Trình Rolling Update Không Gián Đoạn:
+1. Khởi tạo Pod phiên bản mới song song với Pod cũ.
+2. Kiểm tra `readinessProbe` pass 100% mới cho phép gia nhập danh sách Service Endpoints.
+3. Gửi tín hiệu `SIGTERM` dừng Pod cũ an toàn sau khi hoàn tất các request dở dang.
 
 ---
 
-## Slide 9: Traffic Management với Istio (Canary Routing & Fault Injection)
+## Slide 8: Istio Service Mesh & Quản Trị Luồng (Canary Routing)
 
-### 1. Bộ 3 Custom Resource Definitions (CRDs) Cốt lõi
-- **`Gateway`**: Khai báo tiếp nhận traffic tại biên cụm (Edge Ingress) trên cổng 80/443.
-- **`VirtualService`**: Định nghĩa luật định tuyến L7 (Path matching, Header matching, Traffic Splitting).
-- **`DestinationRule`**: Định nghĩa các tập con (**Subsets** v1, v2, v3) và chính sách tải/mTLS.
+### 1. Kiến Trúc 2 Tầng của Istio:
+- **Control Plane (`istiod`)**: Quản lý cấu hình xDS, cấp phát chứng chỉ số mTLS.
+- **Data Plane (Envoy Sidecars)**: Chặn bắt toàn bộ traffic Inbound (:15006) và Outbound (:15001) qua `iptables`.
 
-### 2. Các Kịch bản Định tuyến Thông minh trong Bookinfo
-- **Canary Routing theo Header người dùng**:
+### 2. Bộ Ba Custom Resource Definitions (CRDs) Cốt Lõi:
+- **`Gateway`**: Cấu hình mở cổng biên Ingress tiếp nhận traffic HTTP (Port 80) vào cluster.
+- **`VirtualService`**: Định nghĩa quy tắc định tuyến L7:
   ```yaml
   match:
   - headers:
@@ -202,102 +172,41 @@ flowchart TD
     route:
     - destination: { host: reviews, subset: v2 } # User jason thấy sao đen
   - route:
-    - destination: { host: reviews, subset: v1 } # Các user khác thấy không sao
+    - destination: { host: reviews, subset: v1 } # Khách thường thấy không sao
   ```
-- **Weighted Traffic Shifting**: Chia 50% traffic vào v1 và 50% traffic vào v3 (sao đỏ) để thử nghiệm tải diện rộng.
-- **Fault Injection (Chaos Testing)**: Chèn độ trễ 7 giây vào `ratings` để kiểm tra khả năng chịu lỗi và cơ chế timeout của hệ thống.
+- **`DestinationRule`**: Khai báo danh sách Subsets (`v1`, `v2`, `v3`) ánh xạ theo label Kubernetes.
 
 ---
 
-## Slide 10: Service Mesh Security: Zero Trust & Transparent mTLS
+## Slide 9: Bảo Mật Zero Trust Với Transparent mTLS
 
-### 1. Triết lý Zero Trust trong Mạng Nội bộ
-- Không tin tưởng bất kỳ kết nối nào bên trong mạng cụm Kubernetes (Perimeter Security đã lỗi thời).
-- Mọi giao tiếp giữa các Pod đều phải được **Xác thực (Authentication)**, **Ủy quyền (Authorization)**, và **Mã hóa (Encryption)**.
+### 1. Triết Lý Zero Trust trong Kubernetes:
+- Mạng nội bộ cluster không an toàn; bất kỳ Pod nào cũng có thể bị thỏa hiệp.
+- Mọi kết nối liên Pod bắt buộc phải được: **Xác thực**, **Ủy quyền** và **Mã hóa**.
 
-### 2. Cơ chế Transparent mTLS của Istio
-1. **Cấp phát Định danh**: Mỗi workload được gán một danh tính duy nhất theo chuẩn SPIFFE:  
+### 2. Cơ Chế Transparent mTLS của Istio:
+1. **SPIFFE ID**: Mỗi workload được cấp định danh mật mã bất biến:  
    `spiffe://cluster.local/ns/default/sa/bookinfo-productpage`
-2. **Xoay vòng Chứng chỉ Tự động**: `istiod` đóng vai trò CA cấp phát chứng chỉ số X.509 ngắn hạn cho từng Envoy sidecar qua giao thức SDS (Secret Discovery Service).
-3. **Mã hóa Hai Chiều Tự động**: Lưu lượng giữa `productpage` và `reviews` được mã hóa mTLS hoàn toàn trong suốt với ứng dụng. Chế độ `PeerAuthentication` STRICT ngăn chặn bất kỳ traffic không có sidecar nào.
+2. **Xoay vòng Chứng chỉ Tự động**: `istiod` (Citadel) cấp chứng chỉ X.509 ngắn hạn qua cơ chế SDS (Secret Discovery Service).
+3. **Mã hóa Trong Suốt**: Hai Envoy sidecar tự động thực hiện bắt tay mã hóa TLS hai chiều. Code Python, Ruby hay Java hoàn toàn truyền plain HTTP nội bộ mà không cần cấu hình chứng chỉ.
+4. **Chế độ `PeerAuthentication` STRICT**: Bắt buộc 100% traffic nội bộ phải có mTLS, từ chối mọi kết nối plaintext.
 
 ---
 
-## Slide 11: Cloud-Native Observability: 3 Trụ cột & 4 Golden Signals
+## Slide 10: Giám Sát Prometheus & Grafana + Đánh Đổi Kiến Trúc
 
-### 1. Ba Trụ cột của Khả năng Quan sát (Observability Pillars)
-- **Metrics**: Số liệu thống kê theo thời gian (Time-series) giúp phát hiện sự cố nhanh chóng ("Hệ thống có bất thường không?").
-- **Logs**: Bản ghi sự kiện chi tiết kèm ngữ cảnh lỗi ("Lỗi gì đã xảy ra tại thời điểm t?").
-- **Traces**: Bản đồ hành trình phân tán của request qua các bước nhảy microservice ("Nút thắt cổ chai nằm ở service nào?").
+### 1. Khả Năng Quan Sát (4 Golden Signals) với Prometheus & Grafana:
+- **Pull-based Scraping**: Prometheus định kỳ 15 giây cào số liệu từ cổng `:15090/stats/prometheus` của từng Envoy sidecar.
+- **PromQL Cốt lõi**:
+  - *RPS theo Workload*: `sum(rate(istio_requests_total{reporter="destination"}[1m])) by (destination_workload)`
+  - *Độ trễ P95*: `histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket[1m])) by (le))`
+- **Grafana**: Trực quan hóa bảng điều khiển Istio Mesh Dashboard và Istio Service Dashboard.
 
-### 2. Bốn Tín hiệu Vàng của Google SRE (4 Golden Signals)
-1. **Latency (Độ trễ)**: Thời gian xử lý một request (đo lường theo p50, p90, p99).
-2. **Traffic (Lưu lượng)**: Nhu cầu gửi đến hệ thống (RPS - Requests Per Second).
-3. **Errors (Tỉ lệ lỗi)**: Tỉ lệ các request bị thất bại (HTTP 5xx, gRPC error codes).
-4. **Saturation (Độ bão hòa)**: Mức độ sử dụng tài nguyên (CPU, Memory, Connection Pool).
+### 2. Bảng Đánh Đổi Kiến Trúc (Architectural Trade-offs):
 
----
-
-## Slide 12: Prometheus: Thu thập Số liệu & Truy vấn PromQL trong Bookinfo
-
-### 1. Cơ chế Pull-based Scraping
-- Prometheus định kỳ gửi HTTP GET cào metrics từ cổng quản trị `:15090/stats/prometheus` của từng container Envoy sidecar.
-- Dữ liệu được nén và lưu trữ trong Time-Series Database (TSDB) của Prometheus kèm nhãn đa chiều.
-
-### 2. Các Truy vấn PromQL Thực tế trên Hệ thống Bookinfo
-- **Đo tổng lưu lượng Request Per Second (RPS)**:
-  ```promql
-  sum(rate(istio_requests_total{reporter="destination"}[1m])) by (destination_workload)
-  ```
-- **Đo tỉ lệ lỗi hệ thống**:
-  ```promql
-  sum(rate(istio_requests_total{response_code=~"5.*"}[1m]))
-  ```
-- **Đo độ trễ P95 của dịch vụ Productpage**:
-  ```promql
-  histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_workload="productpage-v1"}[1m])) by (le))
-  ```
-
----
-
-## Slide 13: Kịch bản Live Demo Thực tế (5 Phút Vấn Đáp)
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Tường as Thí sinh (Tường)
-    actor Examiner as Thầy/Cô Chấm thi
-    participant Browser as Client Browser
-    participant K8s as Kubernetes Cluster
-    participant Mesh as Istio VirtualService
-    participant Grafana as Grafana Dashboard
-
-    Tường->>Browser: Mở http://localhost:9080/productpage
-    Browser-->>Examiner: Demo 1: Thấy thông tin sách Polyglot (Python, Ruby, Java, Node.js)
-    Tường->>Mesh: Apply VirtualService (User jason -> reviews:v2)
-    Tường->>Browser: Đăng nhập user 'jason' -> F5
-    Browser-->>Examiner: Demo 2: Xuất hiện sao đen của v2! (Canary Routing thành công)
-    Tường->>Mesh: Apply VirtualService chèn delay 7s vào ratings
-    Tường->>Browser: F5 trang web -> Thấy timeout & graceful degradation
-    Browser-->>Examiner: Demo 3: Fault Injection kiểm chứng tính bền bỉ
-    Tường->>K8s: Cố tình kill Pod details
-    K8s-->>Examiner: Demo 4: Pod mới tự sinh trong 2s (Self-healing Zero Downtime)
-    Tường->>Grafana: Bơm 100 requests -> Mở Dashboard
-    Grafana-->>Examiner: Demo 5: Đồ thị RPS dựng đứng & P95 Latency phản ánh chính xác
-```
-
----
-
-## Slide 14: Tổng kết & Đánh đổi Kiến trúc (Architectural Trade-offs)
-
-### 1. Bảng Đánh đổi Toàn diện khi Triển khai
-
-| Khía cạnh | Lợi thế vượt trội đạt được | Chi phí & Đánh đổi thực tế |
+| Khía cạnh | Lợi thế Vượt trội | Chi phí & Đánh đổi Thực tế |
 |---|---|---|
-| **Polyglot Microservices** | Tự do chọn công nghệ tối ưu cho từng tác vụ; blast radius nhỏ; deploy độc lập. | Quản lý phức tạp nhiều runtime, thư viện và công cụ build khác nhau. |
-| **Envoy Sidecar Pattern** | Tách 100% logic mạng, mTLS, và telemetry ra khỏi code ứng dụng. | Tăng độ trễ mạng (+1.5–3ms hop latency) và tốn tài nguyên (30–50MB RAM/Pod). |
-| **Zero Trust mTLS** | Mã hóa 100% lưu lượng mạng nội bộ tự động, chống tấn công nghe lén. | Tiêu tốn thêm năng lực tính toán CPU cho việc bắt tay mã hóa TLS liên tục. |
-| **Prometheus Telemetry** | Thu thập chỉ số Golden Signals tập trung, phát hiện sự cố nhanh chóng. | Tần suất cào metrics (scrape interval) tạo thêm lưu lượng mạng nội bộ. |
-
-### 2. Lời kết
-- Microservices, Kubernetes và Istio Service Mesh không phải là giải pháp "miễn phí" — chúng giải quyết xuất sắc bài toán quy mô, độc lập triển khai và an ninh phân tán với cái giá là độ phức tạp vận hành và độ trễ hạ tầng được kiểm soát.
+| **Polyglot Microservices** | Tối ưu tech stack từng domain, deploy độc lập, blast radius nhỏ. | Quản lý phức tạp nhiều runtime, build tool và distributed debug. |
+| **Envoy Sidecar Mesh** | Tách 100% logic mạng, mTLS, telemetry ra khỏi code app. | **Hop Latency**: Tăng thêm +1.5–3ms/chặng; **RAM**: Tốn 30–50MB/Pod. |
+| **Zero Trust mTLS** | Tự động mã hóa 100% lưu lượng mạng nội bộ với SPIFFE ID. | CPU overhead cho việc bắt tay mã hóa TLS liên tục giữa các proxy. |
+| **Prometheus Telemetry** | Chuẩn hóa giám sát Golden Signals tập trung, phát hiện lỗi nhanh. | Tần suất cào metrics (scrape interval) tạo thêm lưu lượng mạng nền. |

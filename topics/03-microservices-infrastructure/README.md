@@ -13,7 +13,7 @@
 - Cloud-Native Observability: Metrics vs Logs vs Traces; 4 Golden Signals; Prometheus scrape/PromQL → Grafana dashboards.
 - Phân tích đánh đổi kiến trúc (Architectural Trade-offs): Latency, Resource footprint, Operational complexity.
 
-[Slide trình chiếu (14 slides)](slides/slides.md) · [Slide outline](slides/outline.md) · [Speaker notes](slides/speaker-notes.md)
+[Bộ 7 Slide Độc Quyền Từng Chủ Đề (10 trang / 10 phút)](slides/README.md) · [Slide trình chiếu tổng hợp](slides/slides.md) · [Slide English](slides/slides-en.md) · [Speaker notes](slides/speaker-notes.md)
 
 ## Projects
 
