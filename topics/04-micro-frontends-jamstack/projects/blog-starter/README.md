@@ -1,5 +1,7 @@
 # Next.js Blog Starter — Micro-Frontends và JAMstack
 
+> **Lưu tham khảo:** Blog Starter không còn là demo của Toàn. JAMstack dùng [ScriptHammer](../scripthammer/README.md) trong workspace. Không cần chạy/hoàn thiện slot cũ.
+
 Trọng tâm: Markdown → generateStaticParams → HTML/assets; production build và rebuild demo.
 
 ## Nội dung

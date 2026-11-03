@@ -1,0 +1,152 @@
+[
+  {
+    "trang": 1,
+    "bo_cuc_goc": "TITLE",
+    "tieu_de": "Kiến trúc Micro-frontend"
+  },
+  {
+    "trang": 2,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Micro-frontend chia giao diện theo nghiệp vụ"
+  },
+  {
+    "trang": 3,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Tách phát hành đòi hỏi hợp đồng tương thích"
+  },
+  {
+    "trang": 4,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Cách tích hợp quyết định thời điểm ghép mô-đun"
+  },
+  {
+    "trang": 5,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Tự chủ phát hành đi kèm chi phí tích hợp"
+  },
+  {
+    "trang": 6,
+    "bo_cuc_goc": "SECTION_HEADER",
+    "tieu_de": "Từ khái niệm đến demo"
+  },
+  {
+    "trang": 7,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Cửa hàng ghép danh mục, giỏ hàng và thanh toán"
+  },
+  {
+    "trang": 8,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Ứng dụng chủ ghép hai remote trong trình duyệt"
+  },
+  {
+    "trang": 9,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Mô hình 4+1 tách năm câu hỏi kiến trúc"
+  },
+  {
+    "trang": 10,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Góc nhìn logic phân chia trách nhiệm chức năng"
+  },
+  {
+    "trang": 11,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Giao diện remote công khai gồm năm mô-đun"
+  },
+  {
+    "trang": 12,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Góc nhìn phát triển bộc lộ phụ thuộc mã nguồn"
+  },
+  {
+    "trang": 13,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Góc nhìn tiến trình mô tả tải mã bất đồng bộ"
+  },
+  {
+    "trang": 14,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Lệnh qua bus; Cart sở hữu thay đổi trạng thái"
+  },
+  {
+    "trang": 15,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Ba loại trạng thái có cơ chế lưu khác nhau"
+  },
+  {
+    "trang": 16,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Ba máy chủ phân phối mã cho một runtime phía khách"
+  },
+  {
+    "trang": 17,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Đổi URL remote có hiệu lực sau khi tải lại trang"
+  },
+  {
+    "trang": 18,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Kịch bản liên kết hành vi với bốn góc nhìn"
+  },
+  {
+    "trang": 19,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Luồng checkout đi qua đủ bốn góc nhìn"
+  },
+  {
+    "trang": 20,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Fallback giới hạn lỗi nhưng không cô lập mã"
+  },
+  {
+    "trang": 21,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Các quyết định cân bằng linh hoạt và ràng buộc"
+  },
+  {
+    "trang": 22,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Thay remote không loại bỏ phụ thuộc lúc dựng"
+  },
+  {
+    "trang": 23,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Ba rủi ro trong mã làm yếu tính độc lập"
+  },
+  {
+    "trang": 24,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Hợp đồng rõ giúp củng cố ranh giới phát hành"
+  },
+  {
+    "trang": 25,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Hai bản source có cách phục vụ khác nhau"
+  },
+  {
+    "trang": 26,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Luồng demo ngắn làm rõ các ranh giới kiến trúc"
+  },
+  {
+    "trang": 27,
+    "bo_cuc_goc": "MAIN_POINT",
+    "tieu_de": "Tách bản dựng là bước đầu; hợp đồng quyết định tự chủ"
+  },
+  {
+    "trang": 28,
+    "bo_cuc_goc": "TITLE_ONLY",
+    "tieu_de": "Tài liệu gốc hỗ trợ các khái niệm kiến trúc"
+  },
+  {
+    "trang": 29,
+    "bo_cuc_goc": "TITLE_AND_BODY_1",
+    "tieu_de": "Bản đồ mã nguồn giúp kiểm tra các nhận định"
+  },
+  {
+    "trang": 30,
+    "bo_cuc_goc": "CUSTOM_9",
+    "tieu_de": "Cảm ơn!"
+  }
+]

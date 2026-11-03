@@ -26,3 +26,14 @@ Ngày ghi nhận: 2026-11-01T15:29:46.280852+00:00.
 - Không sử dụng submodule. Các file source thuộc working tree của repo chung, chịu quy tắc `.gitignore`.
 - Commit/branch trên bảng là thông tin nguồn gốc; lịch sử Git cũ không được nhập vào lịch sử repo chung.
 - Chưa tạo commit, chưa cấu hình remote hay publish repo chung.
+
+## Nguồn phần Toàn — cập nhật 03/11/2026
+
+Bảng trên là lịch sử bản copy 01/11. Nguồn chính của Toàn nằm cạnh repo, working tree sạch khi inspect:
+
+| Chủ đề | Workspace / upstream | Commit |
+|---|---|---|
+| MFE | `micro-frontend-demo` / [rautio](https://github.com/rautio/micro-frontend-demo) | `9a4d33596453d2d76da9d8ebb0b5c9249a0a024d` |
+| JAMstack | `ScriptHammer` / [TortoiseWolfe](https://github.com/TortoiseWolfe/ScriptHammer) | `a2dd31ae25ea30c678d990432c7e2b60b4faeda7` |
+
+ScriptHammer thay Blog Starter. Bản copy MFE có Docker/Nginx, nguồn chính không có; bản copy ScriptHammer tại Quality Attributes có commit khác. Xem [phạm vi/bằng chứng](topics/04-micro-frontends-jamstack/EXAM-GUIDE.md). Không sửa ứng dụng trong lượt tài liệu.

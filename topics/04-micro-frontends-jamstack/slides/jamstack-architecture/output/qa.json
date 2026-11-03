@@ -1,0 +1,1 @@
+{"ok": true, "checks": {"validate": {"ok": true, "issue_count": 0}, "lint": {"ok": true, "issue_count": 52}, "assets": {"ok": true, "issue_count": 0}}, "summary": {"slide_count": 35, "shape_count": 718, "text_shape_count": 652, "chart_count": 0, "table_count": 0, "image_count": 0, "unresolved_token_count": 0}}

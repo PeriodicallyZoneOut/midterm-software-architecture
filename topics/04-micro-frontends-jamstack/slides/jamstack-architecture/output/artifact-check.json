@@ -1,0 +1,37 @@
+{
+  "slide_count": 35,
+  "all_slides_have_notes": true,
+  "all_slides_have_sources": true,
+  "template_layouts": {
+    "TITLE": 1,
+    "TITLE_AND_BODY_1": 7,
+    "TITLE_ONLY": 24,
+    "SECTION_HEADER": 1,
+    "MAIN_POINT": 1,
+    "CUSTOM_9": 1
+  },
+  "uses_original_cover_art": true,
+  "notes_in_vietnamese": true,
+  "required_view_slides": {
+    "logical": 14,
+    "development": 16,
+    "process": 18,
+    "physical": 22,
+    "scenarios": 24
+  },
+  "text_box_overlap_count": 0,
+  "text_box_overlaps": [],
+  "font_below_9pt_count": 0,
+  "small_fonts": [],
+  "hyperlink_count": 11,
+  "qa_ok": true,
+  "native_powerpoint": {
+    "opened": true,
+    "slides": 35,
+    "exportedPng": true,
+    "exportedPdf": true,
+    "textOverflowCount": 0,
+    "textOverflow": []
+  },
+  "ok": true
+}
