@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+- helloservice.yaml
+- mariadb.yaml
+configMapGenerator:
+- name: hello-db-init
+  files:
+  - init.sql
+patches:
+- target:
+    kind: Deployment
+    name: frontend
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: frontend
+    spec:
+      template:
+        spec:
+          containers:
+          - name: server
+            env:
+            - name: HELLO_SERVICE_URL
+              value: http://helloservice:8080

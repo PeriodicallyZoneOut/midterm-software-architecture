@@ -1,0 +1,55 @@
+﻿NAME                                    READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                                                           SELECTOR
+deployment.apps/adservice               1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/adservice:v0.10.7               app=adservice
+deployment.apps/cartservice             1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/cartservice:v0.10.7             app=cartservice
+deployment.apps/checkoutservice         1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/checkoutservice:v0.10.7         app=checkoutservice
+deployment.apps/currencyservice         1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/currencyservice:v0.10.7         app=currencyservice
+deployment.apps/emailservice            1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/emailservice:v0.10.7            app=emailservice
+deployment.apps/frontend                1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/frontend:v0.10.7                app=frontend
+deployment.apps/loadgenerator           1/1     1            1           9h    main         us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/loadgenerator:v0.10.7           app=loadgenerator
+deployment.apps/paymentservice          1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/paymentservice:v0.10.7          app=paymentservice
+deployment.apps/productcatalogservice   1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/productcatalogservice:v0.10.7   app=productcatalogservice
+deployment.apps/recommendationservice   1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/recommendationservice:v0.10.7   app=recommendationservice
+deployment.apps/redis-cart              1/1     1            1           9h    redis        redis:alpine                                                                                     app=redis-cart
+deployment.apps/shippingservice         1/1     1            1           9h    server       us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/shippingservice:v0.10.7         app=shippingservice
+
+NAME                                         READY   STATUS    RESTARTS        AGE   IP            NODE                    NOMINATED NODE   READINESS GATES
+pod/adservice-64956dfcbf-5tfb6               1/1     Running   1 (4m40s ago)   9h    10.244.0.12   desktop-control-plane   <none>           <none>
+pod/cartservice-5f597b774-sp756              1/1     Running   1 (4m40s ago)   9h    10.244.0.17   desktop-control-plane   <none>           <none>
+pod/checkoutservice-78b6bcbcc7-k2zmh         1/1     Running   1 (4m40s ago)   9h    10.244.0.11   desktop-control-plane   <none>           <none>
+pod/currencyservice-5c8cbd54c5-d2ztd         1/1     Running   1 (4m40s ago)   9h    10.244.0.15   desktop-control-plane   <none>           <none>
+pod/emailservice-6d9cfd9449-2wbcx            1/1     Running   2 (4m12s ago)   9h    10.244.0.13   desktop-control-plane   <none>           <none>
+pod/frontend-58b4dc4d4d-2tbxp                1/1     Running   1 (4m40s ago)   9h    10.244.0.10   desktop-control-plane   <none>           <none>
+pod/loadgenerator-5985dc76b-jrcds            1/1     Running   1 (4m40s ago)   9h    10.244.0.20   desktop-control-plane   <none>           <none>
+pod/paymentservice-7ff65ff5c7-zvv7m          1/1     Running   1 (4m40s ago)   9h    10.244.0.18   desktop-control-plane   <none>           <none>
+pod/productcatalogservice-67944c9df7-4gh8v   1/1     Running   1 (4m40s ago)   9h    10.244.0.21   desktop-control-plane   <none>           <none>
+pod/recommendationservice-5887f9f797-mp5nf   1/1     Running   1 (4m40s ago)   9h    10.244.0.16   desktop-control-plane   <none>           <none>
+pod/redis-cart-788fbddc7-f9b22               1/1     Running   1 (4m40s ago)   9h    10.244.0.19   desktop-control-plane   <none>           <none>
+pod/shippingservice-7ff767d68f-r4p26         1/1     Running   1 (4m40s ago)   9h    10.244.0.14   desktop-control-plane   <none>           <none>
+
+NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+service/adservice               ClusterIP      10.96.81.168    <none>        9555/TCP       9h    app=adservice
+service/cartservice             ClusterIP      10.96.18.250    <none>        7070/TCP       9h    app=cartservice
+service/checkoutservice         ClusterIP      10.96.251.110   <none>        5050/TCP       9h    app=checkoutservice
+service/currencyservice         ClusterIP      10.96.42.63     <none>        7000/TCP       9h    app=currencyservice
+service/emailservice            ClusterIP      10.96.123.168   <none>        5000/TCP       9h    app=emailservice
+service/frontend                ClusterIP      10.96.121.125   <none>        80/TCP         9h    app=frontend
+service/frontend-external       LoadBalancer   10.96.20.231    <pending>     80:32160/TCP   9h    app=frontend
+service/paymentservice          ClusterIP      10.96.229.197   <none>        50051/TCP      9h    app=paymentservice
+service/productcatalogservice   ClusterIP      10.96.115.253   <none>        3550/TCP       9h    app=productcatalogservice
+service/recommendationservice   ClusterIP      10.96.133.161   <none>        8080/TCP       9h    app=recommendationservice
+service/redis-cart              ClusterIP      10.96.194.7     <none>        6379/TCP       9h    app=redis-cart
+service/shippingservice         ClusterIP      10.96.96.192    <none>        50051/TCP      9h    app=shippingservice
+
+NAME                                                         ADDRESSTYPE   PORTS   ENDPOINTS     AGE
+endpointslice.discovery.k8s.io/adservice-pbjc6               IPv4          9555    10.244.0.12   9h
+endpointslice.discovery.k8s.io/cartservice-qjtwc             IPv4          7070    10.244.0.17   9h
+endpointslice.discovery.k8s.io/checkoutservice-8qvrm         IPv4          5050    10.244.0.11   9h
+endpointslice.discovery.k8s.io/currencyservice-6qh7t         IPv4          7000    10.244.0.15   9h
+endpointslice.discovery.k8s.io/emailservice-qmjb6            IPv4          8080    10.244.0.13   9h
+endpointslice.discovery.k8s.io/frontend-external-g96vs       IPv4          8080    10.244.0.10   9h
+endpointslice.discovery.k8s.io/frontend-q82fs                IPv4          8080    10.244.0.10   9h
+endpointslice.discovery.k8s.io/paymentservice-xv65q          IPv4          50051   10.244.0.18   9h
+endpointslice.discovery.k8s.io/productcatalogservice-pstll   IPv4          3550    10.244.0.21   9h
+endpointslice.discovery.k8s.io/recommendationservice-6pskq   IPv4          8080    10.244.0.16   9h
+endpointslice.discovery.k8s.io/redis-cart-6s4h9              IPv4          6379    10.244.0.19   9h
+endpointslice.discovery.k8s.io/shippingservice-p6gw4         IPv4          50051   10.244.0.14   9h

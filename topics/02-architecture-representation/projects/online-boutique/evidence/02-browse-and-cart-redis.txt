@@ -1,0 +1,58 @@
+﻿HTTP/1.1 200 OK
+Set-Cookie: shop_session-id=2616f5b7-a665-47eb-9a83-301557c01009; Max-Age=172800
+Date: Tue, 03 Nov 2026 14:53:49 GMT
+Content-Type: text/html; charset=utf-8
+Transfer-Encoding: chunked
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>
+        
+        Online Boutique
+        
+    </title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
+        crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+--- POST /cart ---
+HTTP/1.1 302 Found
+Location: /cart
+Date: Tue, 03 Nov 2026 14:53:49 GMT
+Content-Length: 0
+
+--- REDIS KEYS & VALUE ---
+e75ff25c-b086-4dfc-b924-49021dd126e3
+77edad87-42b5-499a-98f1-3b72a3d3458e
+beec8fd0-6822-4b80-b158-8bae67a9c218
+4d0d5cd3-acdf-426d-9c34-1190da00de01
+7e5f1109-a17d-4a6e-8651-c7450a194712
+3d431738-4e8b-47d2-8088-ecea044b488e
+a1680fff-46ef-49e2-bd88-359a6dcf933e
+8ea5dbdb-a4e1-4548-9f42-d2662b1cbc6e
+a37ce164-2b05-4f41-a50b-7ea7066c3787
+27595a1f-c491-4d9a-8cd0-8e03ec935548
+b06649a2-9001-4c71-a917-08818aa902b8
+7a197d85-a9c4-4a59-97f5-154befb38648
+theanh-session-01
+3829f884-8c8d-42e9-80c2-40f6e63a10f5
+0e8bc41c-b87d-414b-9e3f-bc346f586704
+3bf5ad17-fe7c-4e6c-8f19-28d9d404a27d
+e5604dfa-0569-4961-881d-2ded458c9e2e
+10c043ec-5853-4927-880b-178bac79294d
+996cc4b7-47a9-4a38-9167-0326c0c1fb8c
+92570231-2481-4270-bc7f-7420f14fee40
+46d7bb8d-9ada-410d-9289-444c18d3c7ad
+WRONGTYPE Operation against a key holding the wrong kind of value
+
+--- REDIS TYPE & HGETALL FOR theanh-session-01 ---
+none
+

@@ -1,0 +1,54 @@
+﻿
+> HTTP/1.1 200 OK
+  Date: Tue, 03 Nov 2026 14:53:49 GMT
+                  <div class="col-6 pl-md-0">
+>                     Tracking #
+                  </div>
+                  <div class="col-6 pl-md-0">
+>                     Total Paid
+                  </div>
+
+
+--- CHECKOUTSERVICE LOGS ---
+{"message":"payment went through (transaction_id: 2c879e3c-46fd-44c8-b8d0-995357aac12b)","severity":"info","timestamp":"2026-11-03T14:53:02.242966971Z"}
+{"message":"order confirmation email sent to \"zwilliams@example.org\"","severity":"info","timestamp":"2026-11-03T14:53:02.245217241Z"}
+{"message":"[PlaceOrder] user_id=\"4d0d5cd3-acdf-426d-9c34-1190da00de01\" user_currency=\"CAD\"","severity":"info","timestamp":"2026-11-03T14:53:06.54603986Z"}
+{"message":"payment went through (transaction_id: 55bb4750-6696-4507-97ca-e2af151665b8)","severity":"info","timestamp":"2026-11-03T14:53:06.553305557Z"}
+{"message":"order confirmation email sent to \"ijohnson@example.org\"","severity":"info","timestamp":"2026-11-03T14:53:06.55559212Z"}
+{"message":"[PlaceOrder] user_id=\"e5604dfa-0569-4961-881d-2ded458c9e2e\" user_currency=\"CAD\"","severity":"info","timestamp":"2026-11-03T14:53:19.232910909Z"}
+{"message":"payment went through (transaction_id: 589159cf-fae6-4ae9-a41a-dce935b5952a)","severity":"info","timestamp":"2026-11-03T14:53:19.241998113Z"}
+{"message":"order confirmation email sent to \"lcoffey@example.org\"","severity":"info","timestamp":"2026-11-03T14:53:19.245451173Z"}
+{"message":"[PlaceOrder] user_id=\"10c043ec-5853-4927-880b-178bac79294d\" user_currency=\"CAD\"","severity":"info","timestamp":"2026-11-03T14:53:23.914064766Z"}
+{"message":"payment went through (transaction_id: f0128cf0-0aa3-438a-a06e-a6254f1e1eba)","severity":"info","timestamp":"2026-11-03T14:53:23.924454437Z"}
+{"message":"order confirmation email sent to \"uporter@example.org\"","severity":"info","timestamp":"2026-11-03T14:53:23.928153448Z"}
+{"message":"[PlaceOrder] user_id=\"b06649a2-9001-4c71-a917-08818aa902b8\" user_currency=\"JPY\"","severity":"info","timestamp":"2026-11-03T14:53:26.004365681Z"}
+{"message":"payment went through (transaction_id: 9b724e84-cbc1-4950-83c5-9058ae66c32c)","severity":"info","timestamp":"2026-11-03T14:53:26.014127564Z"}
+{"message":"order confirmation email sent to \"miguel96@example.com\"","severity":"info","timestamp":"2026-11-03T14:53:26.018899981Z"}
+{"message":"[PlaceOrder] user_id=\"4d0d5cd3-acdf-426d-9c34-1190da00de01\" user_currency=\"GBP\"","severity":"info","timestamp":"2026-11-03T14:53:38.414163542Z"}
+{"message":"payment went through (transaction_id: b92ac23a-e080-447d-8af4-989bee40e3dd)","severity":"info","timestamp":"2026-11-03T14:53:38.422124234Z"}
+{"message":"order confirmation email sent to \"danderson@example.net\"","severity":"info","timestamp":"2026-11-03T14:53:38.425798396Z"}
+{"message":"[PlaceOrder] user_id=\"theanh-session-01\" user_currency=\"USD\"","severity":"info","timestamp":"2026-11-03T14:53:49.918889232Z"}
+{"message":"payment went through (transaction_id: 29c530dc-99eb-42b7-a0c1-999daa0dc6df)","severity":"info","timestamp":"2026-11-03T14:53:49.926900417Z"}
+{"message":"order confirmation email sent to \"theanh@example.com\"","severity":"info","timestamp":"2026-11-03T14:53:49.93031633Z"}
+--- PAYMENTSERVICE LOGS ---
+{"severity":"info","time":1793717599241,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-server","message":"PaymentService#Charge invoked with request {\"amount\":{\"currency_code\":\"CAD\",\"units\":\"1258\",\"nanos\":935968154},\"credit_card\":{\"credit_card_number\":\"4886223513258656\",\"credit_card_cvv\":209,\"credit_card_expiration_year\":2040,\"credit_card_expiration_month\":6}}"}
+{"severity":"info","time":1793717599241,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-charge","message":"Transaction processed: visa ending 8656     Amount: CAD1258.935968154"}
+{"severity":"info","time":1793717603923,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-server","message":"PaymentService#Charge invoked with request {\"amount\":{\"currency_code\":\"CAD\",\"units\":\"346\",\"nanos\":277979652},\"credit_card\":{\"credit_card_number\":\"4792428770723853\",\"credit_card_cvv\":923,\"credit_card_expiration_year\":2047,\"credit_card_expiration_month\":11}}"}
+{"severity":"info","time":1793717603923,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-charge","message":"Transaction processed: visa ending 3853     Amount: CAD346.277979652"}
+{"severity":"info","time":1793717606013,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-server","message":"PaymentService#Charge invoked with request {\"amount\":{\"currency_code\":\"JPY\",\"units\":\"22631\",\"nanos\":246351325},\"credit_card\":{\"credit_card_number\":\"4246018647088580\",\"credit_card_cvv\":481,\"credit_card_expiration_year\":2074,\"credit_card_expiration_month\":9}}"}
+{"severity":"info","time":1793717606013,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-charge","message":"Transaction processed: visa ending 8580     Amount: JPY22631.246351325"}
+{"severity":"info","time":1793717618421,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-server","message":"PaymentService#Charge invoked with request {\"amount\":{\"currency_code\":\"GBP\",\"units\":\"104\",\"nanos\":829407337},\"credit_card\":{\"credit_card_number\":\"4140285556299907\",\"credit_card_cvv\":630,\"credit_card_expiration_year\":2035,\"credit_card_expiration_month\":12}}"}
+{"severity":"info","time":1793717618421,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-charge","message":"Transaction processed: visa ending 9907     Amount: GBP104.829407337"}
+{"severity":"info","time":1793717629926,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-server","message":"PaymentService#Charge invoked with request {\"amount\":{\"currency_code\":\"USD\",\"units\":\"48\",\"nanos\":970000000},\"credit_card\":{\"credit_card_number\":\"4388576018410707\",\"credit_card_cvv\":123,\"credit_card_expiration_year\":2030,\"credit_card_expiration_month\":9}}"}
+{"severity":"info","time":1793717629926,"pid":1,"hostname":"paymentservice-7ff65ff5c7-zvv7m","name":"paymentservice-charge","message":"Transaction processed: visa ending 0707     Amount: USD48.970000000"}
+--- EMAILSERVICE LOGS ---
+{"timestamp": 1793717558.15843, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to leebrandon@example.net has been received."}
+{"timestamp": 1793717562.5380545, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to kellyreynolds@example.net has been received."}
+{"timestamp": 1793717569.5583317, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to hayessteven@example.net has been received."}
+{"timestamp": 1793717582.2449477, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to zwilliams@example.org has been received."}
+{"timestamp": 1793717586.5552754, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to ijohnson@example.org has been received."}
+{"timestamp": 1793717599.2451196, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to lcoffey@example.org has been received."}
+{"timestamp": 1793717603.9278255, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to uporter@example.org has been received."}
+{"timestamp": 1793717606.0183303, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to miguel96@example.com has been received."}
+{"timestamp": 1793717618.4254231, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to danderson@example.net has been received."}
+{"timestamp": 1793717629.9296036, "severity": "INFO", "name": "emailservice-server", "message": "A request to send order confirmation email to theanh@example.com has been received."}
