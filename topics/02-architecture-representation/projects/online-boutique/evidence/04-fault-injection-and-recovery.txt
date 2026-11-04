@@ -1,0 +1,38 @@
+﻿=== 1. FAULT INJECTION: SCALE ADSERVICE TO 0 (NON-CRITICAL) ===
+deployment.apps/adservice scaled
+HTTP/1.1 200 OK
+Set-Cookie: shop_session-id=454b10c4-6f4c-401c-a14c-ecf17e76554d; Max-Age=172800
+Date: Tue, 03 Nov 2026 14:53:50 GMT
+Content-Type: text/html; charset=utf-8
+
+deployment.apps/adservice scaled
+=== 2. FAULT INJECTION: SCALE REDIS-CART TO 0 (CRITICAL -> HTTP 500) ===
+deployment.apps/redis-cart scaled
+HTTP/1.1 500 Internal Server Error
+Date: Tue, 03 Nov 2026 14:53:59 GMT
+Content-Type: text/html; charset=utf-8
+Transfer-Encoding: chunked
+
+
+    
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>
+        
+        Online Boutique
+        
+    </title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
+=== 3. RECOVERY: SCALE REDIS-CART BACK TO 1 (HTTP 200 OK) ===
+deployment.apps/redis-cart scaled
+deployment.apps/redis-cart condition met
+HTTP/1.1 200 OK
+Set-Cookie: shop_session-id=ba71fc30-1b0f-4d1f-9731-d4e92ab6babb; Max-Age=172800
+Date: Tue, 03 Nov 2026 14:54:02 GMT
+Content-Type: text/html; charset=utf-8
+

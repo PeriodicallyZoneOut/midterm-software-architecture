@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloservice
+  labels:
+    app: helloservice
+spec:
+  selector:
+    matchLabels:
+      app: helloservice
+  template:
+    metadata:
+      labels:
+        app: helloservice
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: server
+        image: helloservice:hello-local
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: hello-db
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: hello
+        - name: DB_USER
+          value: hello
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hello-db-credentials
+              key: password
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: http
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloservice
+  labels:
+    app: helloservice
+spec:
+  selector:
+    app: helloservice
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http

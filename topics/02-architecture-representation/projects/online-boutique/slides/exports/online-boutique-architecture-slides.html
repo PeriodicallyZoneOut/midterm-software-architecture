@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biểu diễn Kiến trúc Online Boutique — Architecture Representation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-slide: #F7F6F2;
+      --bg-white: #FFFFFF;
+      --bg-dark: #111C2D;
+      --text-black: #111318;
+      --text-charcoal: #2D3142;
+      --text-white: #FFFFFF;
+      --accent: #00A896;
+      --border-light: #E2E4E8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #2D3142;
+      font-family: 'Nunito', sans-serif;
+      color: var(--text-black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px 80px;
+      gap: 32px;
+    }
+
+    .toolbar {
+      position: fixed;
+      bottom: 20px;
+      background: rgba(17, 28, 45, 0.94);
+      color: var(--text-white);
+      padding: 10px 22px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 1000;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      font-size: 16px;
+    }
+
+    .toolbar button {
+      background: var(--accent);
+      color: var(--text-white);
+      border: none;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .slide {
+      width: 1280px;
+      height: 720px;
+      background-color: var(--bg-slide);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      padding: 64px 84px;
+      page-break-after: always;
+    }
+
+    /* TYPOGRAPHY PER STRICT REQUIREMENTS:
+       - Slide title: Playfair Display, 36px
+       - Section/Card title: Playfair Display, 26px
+       - Body & Bullets: Nunito, 16px - 18px
+    */
+    .kicker {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .slide-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--text-black);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      line-height: 1.2;
+    }
+
+    .slide-title.center {
+      text-align: center;
+      margin-top: 28px;
+      margin-bottom: 44px;
+    }
+
+    /* TOP-LEFT TAG FOR BULLET SLIDES (LIKE IMAGE 2) */
+    .top-tag {
+      position: absolute;
+      top: 28px;
+      left: 36px;
+      border: 1.5px solid #9AA0A6;
+      background: var(--bg-white);
+      padding: 8px 22px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-black);
+    }
+
+    /* LAYOUT A: 3 CARDS + ARROWS (LIKE IMAGE 1) */
+    .cards-flow {
+      margin-top: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: 1;
+      max-height: 430px;
+    }
+
+    .flow-card {
+      width: 325px;
+      height: 390px;
+      background: var(--bg-white);
+      border: 1.5px solid var(--border-light);
+      border-radius: 16px;
+      padding: 34px 28px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    }
+
+    .flow-card.dark {
+      background: var(--bg-dark);
+      border-color: var(--bg-dark);
+      color: var(--text-white);
+      box-shadow: 0 10px 28px rgba(17, 28, 45, 0.18);
+    }
+
+    .card-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 22px;
+      line-height: 1.25;
+    }
+
+    .flow-card ul {
+      list-style: disc;
+      padding-left: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .flow-card li {
+      font-family: 'Nunito', sans-serif;
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text-black);
+    }
+
+    .flow-card.dark li {
+      color: var(--text-white);
+    }
+
+    .flow-arrow {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--accent);
+      user-select: none;
+      padding: 0 6px;
+    }
+
+    /* LAYOUT B: CLEAN BULLET LIST (LIKE IMAGE 2) */
+    .bullet-container {
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .main-bullets {
+      list-style: disc;
+      padding-left: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .main-bullets > li {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+      color: var(--text-black);
+    }
+
+    .sub-bullets {
+      list-style: circle;
+      padding-left: 38px;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sub-bullets > li {
+      font-family: 'Nunito', sans-serif;
+      font-size: 17px;
+      line-height: 1.55;
+      color: var(--text-charcoal);
+    }
+
+    .hl {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .slide-num {
+      position: absolute;
+      bottom: 22px;
+      right: 36px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #7A828E;
+    }
+
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+        gap: 0;
+      }
+      .toolbar {
+        display: none;
+      }
+      .slide {
+        box-shadow: none;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SLIDE 1 -->
+  <section class="slide" id="slide-1">
+    <div class="kicker">Chủ đề 02 · Architecture Representation</div>
+    <h1 class="slide-title">BIỂU DIỄN KIẾN TRÚC ONLINE BOUTIQUE</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">Hệ thống</h2>
+        <ul>
+          <li>Google Online Boutique (<code>v0.10.7</code>) chuẩn Cloud-Native</li>
+          <li>10 Microservices nghiệp vụ + 1 LoadGen + 1 Redis</li>
+          <li>Đa ngôn ngữ: Go, C# .NET, Node.js, Python, Java</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">Phương pháp</h2>
+        <ul>
+          <li>Mô hình 4+1 Views tách biệt 5 góc nhìn kiến trúc</li>
+          <li>Mô hình C4 làm 4 cấp độ phóng đại cấu trúc tĩnh</li>
+          <li>Mô hình dữ liệu Protobuf, Redis Cart &amp; JSON Catalog</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">Truy xuất</h2>
+        <ul>
+          <li>Hộp sơ đồ ánh xạ tới hợp đồng <code>protos/demo.proto</code></li>
+          <li>Đối chiếu hàm xử lý (<code>file:line</code>) ở từng ngôn ngữ</li>
+          <li>Kiểm chứng trên 12 Deployments &amp; Services Kubernetes</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">01 / 12</div>
+  </section>
+
+  <!-- SLIDE 2 -->
+  <section class="slide" id="slide-2">
+    <div class="kicker">Phần 1 · Lý thuyết nền tảng</div>
+    <h1 class="slide-title">STAKEHOLDERS, 4+1 VIEWS &amp; C4 MODEL</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">Stakeholders</h2>
+        <ul>
+          <li>Khách hàng cần duyệt sản phẩm, đổi tiền tệ &amp; đặt hàng mượt</li>
+          <li>Lập trình viên cần hợp đồng gRPC đa ngôn ngữ rõ ràng</li>
+          <li>Vận hành (SRE) cần quản lý Pod, Service, Probes &amp; CPU/RAM</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">4+1 Views</h2>
+        <ul>
+          <li>4 sơ đồ UML đơn lẻ không đồng nghĩa với 4 Views</li>
+          <li>Gồm Logical, Development, Process và Physical View</li>
+          <li>Hội tụ tại <code>+1 Scenarios</code> để kiểm chứng kiến trúc</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">C4 Zoom Levels</h2>
+        <ul>
+          <li>Cung cấp 4 mức phóng đại: Context, Container, Component, Code</li>
+          <li>Bổ trợ trực tiếp cho Logical View và Development View</li>
+          <li>Kết hợp thêm Data Model, Security &amp; Concurrency View</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">02 / 12</div>
+  </section>
+
+  <!-- SLIDE 3 -->
+  <section class="slide" id="slide-3">
+    <div class="top-tag">Mô hình C4 — Cấp độ 1 &amp; 2</div>
+    <h1 class="slide-title center">C4 CONTEXT &amp; CONTAINER (11 MICROSERVICES)</h1>
+
+    <div class="bullet-container">
+      <ul class="main-bullets">
+        <li><strong>C4 Level 1 (System Context):</strong> Khách mua hàng và <code>loadgenerator</code> (Locust) tương tác với Online Boutique qua cổng HTTP duy nhất là <code>frontend</code>.</li>
+        <li><strong>C4 Level 2 (Polyglot gRPC Containers):</strong> Nội bộ cụm Kubernetes giao tiếp hoàn toàn bằng gRPC (HTTP/2) dựa trên hợp đồng <code>protos/demo.proto</code>.</li>
+        <li><strong>Phân loại các nhóm dịch vụ theo thực tế mã nguồn:</strong>
+          <ul class="sub-bullets">
+            <li><span class="hl">Dịch vụ xử lý dữ liệu thật:</span> <code>frontend</code> (Go), <code>cartservice</code> (C# + <code>redis-cart</code>), <code>productcatalogservice</code> (Go), <code>currencyservice</code> (Node.js), <code>checkoutservice</code> (Go), <code>recommendationservice</code> (Python), <code>adservice</code> (Java).</li>
+            <li><span class="hl">Dịch vụ tích hợp mô phỏng (Mock / Stateless):</span> <code>paymentservice</code> (kiểm tra thẻ VISA/MC rồi sinh UUID), <code>shippingservice</code> (tính phí theo số lượng item), <code>emailservice</code> (chạy <code>DummyEmailService</code> chỉ ghi log).</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="slide-num">03 / 12</div>
+  </section>
+
+  <!-- SLIDE 4 -->
+  <section class="slide" id="slide-4">
+    <div class="kicker">Mô hình 4+1 — Góc nhìn 1 &amp; 2</div>
+    <h1 class="slide-title">LOGICAL VIEW &amp; DEVELOPMENT VIEW</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">Logical View</h2>
+        <ul>
+          <li><code>frontend</code> làm BFF / API Gateway kết nối 7 dịch vụ</li>
+          <li><code>checkoutservice</code> làm Orchestrator điều phối 6 dịch vụ</li>
+          <li>Tách biệt rõ dịch vụ cốt lõi và dịch vụ phụ trợ (Ad, Rec)</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">Development View</h2>
+        <ul>
+          <li>11 thư mục độc lập trong <code>src/*</code> ứng với 5 ngôn ngữ</li>
+          <li>Nguyên tắc Share-Nothing: không dùng chung code nội bộ</li>
+          <li>Mỗi dịch vụ có Multi-stage <code>Dockerfile</code> tối ưu riêng</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">Hợp đồng Protobuf</h2>
+        <ul>
+          <li><code>protos/demo.proto</code> định nghĩa 9 Services &amp; 29 Messages</li>
+          <li>Go, C#, Python, Java biên dịch tĩnh ra stub lúc build</li>
+          <li>Node.js nạp động lúc chạy qua <code>@grpc/proto-loader</code></li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">04 / 12</div>
+  </section>
+
+  <!-- SLIDE 5 -->
+  <section class="slide" id="slide-5">
+    <div class="top-tag">Mô hình C4 — Cấp độ 3 &amp; 4</div>
+    <h1 class="slide-title center">CẤU TRÚC BÊN TRONG FRONTEND, CHECKOUT &amp; CART</h1>
+
+    <div class="bullet-container">
+      <ul class="main-bullets">
+        <li><strong>Cấu trúc <code>frontend</code> (<code>src/frontend/</code> — Go):</strong>
+          <ul class="sub-bullets">
+            <li><code>middleware.go</code> (cấp Cookie <code>shop_session-id</code>), <code>handlers.go</code> (xử lý HTTP routes), <code>validator.go</code> (kiểm tra payload), và <code>rpc.go</code> (gọi 7 gRPC channels).</li>
+          </ul>
+        </li>
+        <li><strong>Cấu trúc <code>checkoutservice</code> (<code>src/checkoutservice/main.go</code> — Go):</strong>
+          <ul class="sub-bullets">
+            <li>Hàm <code>PlaceOrder()</code> gọi <code>prepareOrderItemsAndShippingQuoteFromCart()</code> và thư viện <code>money/money.go</code> (<code>Sum</code>, <code>MultiplySlow</code>) để cộng tiền chính xác.</li>
+          </ul>
+        </li>
+        <li><strong>Cấu trúc <code>cartservice</code> (<code>src/cartservice/src/</code> — C# .NET):</strong>
+          <ul class="sub-bullets">
+            <li><code>CartService.cs</code> (gRPC Servicer) gọi qua interface <code>ICartStore</code> xuống <code>RedisCartStore.cs</code>, dùng <code>Google.Protobuf</code> tuần tự hóa <code>Cart.ToByteArray()</code>.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="slide-num">05 / 12</div>
+  </section>
+
+  <!-- SLIDE 6 -->
+  <section class="slide" id="slide-6">
+    <div class="kicker">Mô hình 4+1 — Góc nhìn 3 (Process View)</div>
+    <h1 class="slide-title">LUỒNG ĐẶT HÀNG ĐỒNG BỘ (PLACEORDER)</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">1. Chuẩn bị &amp; Giá</h2>
+        <ul>
+          <li><code>checkoutservice</code> sinh <code>orderID</code> UUID mới</li>
+          <li>Gọi <code>GetCart(:7070)</code> lấy các món hàng trong giỏ</li>
+          <li>Lặp gọi <code>GetProduct(:3550)</code> và <code>Convert(:7000)</code></li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">2. Thu tiền &amp; Ship</h2>
+        <ul>
+          <li>Gọi <code>GetQuote(:50051)</code> và quy đổi phí vận chuyển</li>
+          <li>Cộng tổng tiền bằng <code>money.Sum</code> rồi gọi <code>Charge(:50051)</code></li>
+          <li>Gọi <code>ShipOrder(:50051)</code> nhận mã vận đơn <code>tracking_id</code></li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">3. Hoàn tất đơn</h2>
+        <ul>
+          <li>Gọi <code>EmptyCart(:7070)</code> làm rỗng giỏ hàng Redis</li>
+          <li>Gọi <code>SendOrderConfirmation(:5000)</code> ghi log gửi thư</li>
+          <li>Trả <code>OrderResult</code> về <code>frontend</code> hiển thị ngay</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">06 / 12</div>
+  </section>
+
+  <!-- SLIDE 7 -->
+  <section class="slide" id="slide-7">
+    <div class="top-tag">Mô hình 4+1 — Góc nhìn 4 &amp; +1 Scenarios</div>
+    <h1 class="slide-title center">DEPLOYMENT VIEW (K8S) &amp; CHỊU LỖI (+1)</h1>
+
+    <div class="bullet-container">
+      <ul class="main-bullets">
+        <li><strong>Kubernetes Topology (<code>release/kubernetes-manifests.yaml</code>):</strong>
+          <ul class="sub-bullets">
+            <li>Gồm <span class="hl">12 Deployments</span> và <span class="hl">12 Services</span>. Chỉ <code>frontend-external</code> mở <code>LoadBalancer :80->8080</code>; toàn bộ dịch vụ nội bộ dùng <code>ClusterIP</code>.</li>
+            <li>Ánh xạ cổng đặc biệt: Container <code>emailservice</code> chạy cổng <code>8080</code> nhưng Service mở cổng <code>5000 -> targetPort: 8080</code>.</li>
+          </ul>
+        </li>
+        <li><strong>Kiểm tra sức khỏe &amp; Giới hạn tài nguyên (Probes &amp; Resources):</strong>
+          <ul class="sub-bullets">
+            <li>Sử dụng native <code>grpc</code> readiness/liveness probes cho các dịch vụ gRPC, <code>httpGet /_healthz</code> cho <code>frontend</code> và <code>tcpSocket :6379</code> cho <code>redis-cart</code>.</li>
+          </ul>
+        </li>
+        <li><strong>Kịch bản chịu lỗi (+1 Scenarios — Fault Isolation):</strong>
+          <ul class="sub-bullets">
+            <li><span class="hl">Non-Critical:</span> Tắt <code>adservice</code> (timeout 100ms) hoặc <code>recommendationservice</code> &rarr; <code>frontend</code> chỉ <code>log.Warn</code>, trang web vẫn trả <code>HTTP 200 OK</code>.</li>
+            <li><span class="hl">Critical:</span> Tắt <code>redis-cart</code> hoặc <code>productcatalogservice</code> &rarr; ném <code>RpcException</code>, trả <code>HTTP 500</code> và tự phục hồi khi Pod Ready.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="slide-num">07 / 12</div>
+  </section>
+
+  <!-- SLIDE 8 -->
+  <section class="slide" id="slide-8">
+    <div class="kicker">Phần 3 · Data Schema / Data Model</div>
+    <h1 class="slide-title">MÔ HÌNH DỮ LIỆU: REDIS, JSON &amp; PROTOBUF</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">Redis Cart Schema</h2>
+        <ul>
+          <li>Baseline không dùng SQL DB mà dùng <code>redis-cart:6379</code></li>
+          <li>Key là chuỗi <code>user_id</code> (từ cookie <code>shop_session-id</code>)</li>
+          <li>Value là mảng byte nhị phân <code>Cart.ToByteArray()</code></li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">JSON Static Schema</h2>
+        <ul>
+          <li><code>products.json</code> lưu 9 sản phẩm nạp thẳng vào RAM</li>
+          <li><code>currency_conversion.json</code> lưu tỷ giá chuẩn ECB</li>
+          <li>Truy xuất tốc độ cao trong bộ nhớ, không tốn I/O ổ đĩa</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">Exact Money Model</h2>
+        <ul>
+          <li>Message <code>Money</code> tách <code>int64 units</code> và <code>int32 nanos</code></li>
+          <li>Tránh hoàn toàn sai số dấu phẩy động IEEE 754</li>
+          <li><code>OrderResult</code> chốt giá snapshot trả về ngay lúc đặt hàng</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">08 / 12</div>
+  </section>
+
+  <!-- SLIDE 9 -->
+  <section class="slide" id="slide-9">
+    <div class="kicker">Phần 4 · Security &amp; Concurrency View</div>
+    <h1 class="slide-title">BẢO MẬT CONTAINER &amp; XỬ LÝ ĐỒNG THỜI</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">Trust Boundaries</h2>
+        <ul>
+          <li>3 vùng: Internet &rarr; <code>frontend</code> &rarr; gRPC ClusterIP &rarr; Redis</li>
+          <li>Kiểm tra đầu vào tại <code>validator.go</code> và <code>charge.js</code></li>
+          <li>Đề xuất thêm Istio mTLS &amp; NetworkPolicy cho Redis</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">Pod SecurityContext</h2>
+        <ul>
+          <li>Toàn bộ 12 Deployments chạy <code>runAsNonRoot: true</code> (UID 1000)</li>
+          <li>Bật <code>readOnlyRootFilesystem: true</code> chống ghi tệp độc hại</li>
+          <li>Tắt <code>allowPrivilegeEscalation</code> &amp; <code>drop: ["ALL"]</code></li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">Concurrency View</h2>
+        <ul>
+          <li>Go Goroutines &amp; .NET Async ghép kênh trên HTTP/2</li>
+          <li><code>AddItemAsync</code> dùng mẫu Read-Modify-Write không khóa</li>
+          <li>2 request cùng <code>user_id</code> đồng thời có thể gây Lost Update</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">09 / 12</div>
+  </section>
+
+  <!-- SLIDE 10 -->
+  <section class="slide" id="slide-10">
+    <div class="kicker">Phần 5 · Component Mapping (1/2)</div>
+    <h1 class="slide-title">ÁNH XẠ FRONTEND, CATALOG &amp; CURRENCY</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">Frontend Service</h2>
+        <ul>
+          <li>Code: <code>src/frontend/handlers.go:59, 211, 320</code></li>
+          <li>Runtime: <code>Deployment/frontend</code> cổng <code>8080</code></li>
+          <li>Nối 7 gRPC channels; timeout <code>chooseAd</code> 100ms</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">Product Catalog</h2>
+        <ul>
+          <li>Code: <code>src/productcatalogservice/product_catalog.go:41-72</code></li>
+          <li>Runtime: <code>Service/productcatalogservice:3550</code></li>
+          <li>Đọc <code>products.json</code>; trả <code>codes.NotFound</code> nếu sai ID</li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">Currency Service</h2>
+        <ul>
+          <li>Code: <code>src/currencyservice/server.js:117, 138</code></li>
+          <li>Runtime: <code>Service/currencyservice:7000</code> (Node.js)</li>
+          <li>Hàm <code>_carry()</code> và <code>convert()</code> tính tỷ giá qua EUR</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">10 / 12</div>
+  </section>
+
+  <!-- SLIDE 11 -->
+  <section class="slide" id="slide-11">
+    <div class="kicker">Phần 5 · Component Mapping (2/2)</div>
+    <h1 class="slide-title">ÁNH XẠ CART, CHECKOUT &amp; MOCK SERVICES</h1>
+
+    <div class="cards-flow">
+      <div class="flow-card">
+        <h2 class="card-heading">Cart &amp; Redis</h2>
+        <ul>
+          <li>Code: <code>src/cartservice/src/cartstore/RedisCartStore.cs:33</code></li>
+          <li>Runtime: <code>cartservice:7070</code> &rarr; <code>redis-cart:6379</code></li>
+          <li>Lỗi Redis ném <code>RpcException(FailedPrecondition)</code></li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card dark">
+        <h2 class="card-heading">Checkout Service</h2>
+        <ul>
+          <li>Code: <code>src/checkoutservice/main.go:230-280</code> (<code>PlaceOrder</code>)</li>
+          <li>Runtime: <code>Service/checkoutservice:5050</code> (Go)</li>
+          <li>Điều phối 6 dịch vụ con; dùng <code>money.Sum</code> &amp; <code>MultiplySlow</code></li>
+        </ul>
+      </div>
+
+      <div class="flow-arrow">➡</div>
+
+      <div class="flow-card">
+        <h2 class="card-heading">Mock &amp; Phụ trợ</h2>
+        <ul>
+          <li><code>payment/charge.js:61</code> &amp; <code>shipping/main.go:119, 142</code></li>
+          <li><code>email_server.py:108</code> (<code>DummyEmailService</code>, port <code>5000->8080</code>)</li>
+          <li><code>recommendation_server.py:70</code> (:8080) &amp; <code>AdService.java:94</code> (:9555)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">11 / 12</div>
+  </section>
+
+  <!-- SLIDE 12 -->
+  <section class="slide" id="slide-12">
+    <div class="top-tag">Tổng kết &amp; Đánh đổi Kiến trúc</div>
+    <h1 class="slide-title center">ĐÁNH ĐỔI KIẾN TRÚC (TRADE-OFFS) &amp; KẾT LUẬN</h1>
+
+    <div class="bullet-container">
+      <ul class="main-bullets">
+        <li><strong>Polyglot gRPC + Protobuf vs. Chatty Calls:</strong>
+          <ul class="sub-bullets">
+            <li>Hợp đồng <code>protos/demo.proto</code> giúp 5 ngôn ngữ giao tiếp chặt chẽ trên HTTP/2, nhưng thiếu API batch khiến <code>frontend</code> và <code>checkoutservice</code> phải lặp N cuộc gọi <code>Convert</code>/<code>GetProduct</code>.</li>
+          </ul>
+        </li>
+        <li><strong>Synchronous Orchestrator (<code>checkoutservice</code>) vs. Choreography (EDA):</strong>
+          <ul class="sub-bullets">
+            <li>Luồng <code>PlaceOrder()</code> tập trung giúp dễ đọc code và trả ngay kết quả đặt hàng, nhưng phụ thuộc thời gian chạy vào 5 dịch vụ và chưa có bước hoàn tiền bù trừ (Saga Refund) nếu giao hàng lỗi.</li>
+          </ul>
+        </li>
+        <li><strong>Stateless Checkout &amp; In-Memory Store vs. Persistent RDBMS:</strong>
+          <ul class="sub-bullets">
+            <li>Dùng <code>products.json</code> trong RAM và <code>redis-cart</code> (<code>emptyDir</code>) giúp triển khai Kubernetes cực nhẹ và dễ nhân bản, đổi lại đơn hàng chỉ là <code>OrderResult</code> tạm thời không lưu lịch sử lâu dài.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="slide-num">12 / 12</div>
+  </section>
+
+  <div class="toolbar">
+    <button onclick="prevSlide()">◀ Trước</button>
+    <span id="indicator">Slide 1 / 12</span>
+    <button onclick="nextSlide()">Tiếp ▶</button>
+    <button onclick="window.print()">🖨 Xuất PDF</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const indicator = document.getElementById('indicator');
+    let current = 0;
+
+    function goToSlide(idx) {
+      if (idx < 0) idx = 0;
+      if (idx >= slides.length) idx = slides.length - 1;
+      current = idx;
+      slides[current].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      indicator.textContent = `Slide ${current + 1} / ${slides.length}`;
+    }
+
+    function prevSlide() { goToSlide(current - 1); }
+    function nextSlide() { goToSlide(current + 1); }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>

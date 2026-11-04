@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-db
+  labels:
+    app: hello-db
+spec:
+  clusterIP: None
+  selector:
+    app: hello-db
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hello-db
+  labels:
+    app: hello-db
+spec:
+  serviceName: hello-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-db
+  template:
+    metadata:
+      labels:
+        app: hello-db
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: mariadb
+        image: mariadb:11.8
+        args:
+        - --innodb-buffer-pool-size=64M
+        - --max-connections=30
+        - --performance-schema=OFF
+        ports:
+        - name: mysql
+          containerPort: 3306
+        env:
+        - name: MARIADB_DATABASE
+          value: hello
+        - name: MARIADB_USER
+          value: hello
+        - name: MARIADB_ROOT_HOST
+          value: localhost
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hello-db-credentials
+              key: password
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hello-db-credentials
+              key: root-password
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        - name: init
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+        startupProbe:
+          exec:
+            command: [healthcheck.sh, --connect, --innodb_initialized]
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 60
+        readinessProbe:
+          exec:
+            command: [healthcheck.sh, --connect, --innodb_initialized]
+          timeoutSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: mysql
+          timeoutSeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: init
+        configMap:
+          name: hello-db-init
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 1Gi
