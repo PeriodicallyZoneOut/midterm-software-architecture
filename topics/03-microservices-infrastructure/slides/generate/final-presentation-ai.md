@@ -1,271 +1,493 @@
-# Cloud-Native Microservices Architecture & Infrastructure: End-to-End Defense
-**Presenter**: Tuong | Master Architectural Presentation (10 Minutes Total — 1 Slide Per Topic)
-**Format**: 10 Slides (Exactly 60 seconds per slide)
-**Design Theme**: Modern Dark Mode (#0d1117 background, cyan/blue accent #58a6ff, high-contrast architecture cards)
-**Target Tool**: Optimized for direct paste into **Gamma.app**, **Tome.app**, or **SlidesGPT**
+# AI Slide Generation Directive & Visual Style Guide
+> **Instructions for AI**: You are a Principal Cloud-Native Software Architect and Senior SRE Lead. Generate a high-impact, professional 10-slide presentation following the exact metadata, design system, and visual layout rules defined below. No explaination in each slides, only have titles and diagram mention below:
+
+## 📋 Presentation Metadata
+- **Topic**: Cloud-Native Microservices Architecture & Modern Infrastructure (Bookinfo on Kubernetes & Istio)
+- **Presenter**: Tuong | 10-Minute Master Architectural Defense
+- **Scale**: Exactly 10 Slides (1 Slide Per Core Architectural Topic)
+- **Aspect Ratio**: 16:9 Widescreen Presentation (1920x1080)
+- **Target Audience**: Academic Examination Board & Principal Software Architects
+
+## 🎨 Visual Style & Design System
+- **Theme**: Obsidian Dark Engineering Theme / Modern Cloud-Native Dark Mode
+- **Color Palette**:
+  - Primary Background: Deep Obsidian Navy (`#0d1117`)
+  - Surface / Card Containers: Dark Graphite (`#161b22`)
+  - Structural Borders: Clean Muted Gray (`#30363d`)
+  - Accent / Primary Focus: Electric Cyan (`#58a6ff`)
+  - Success / Security Highlight: Neon Emerald (`#10b981`)
+  - Warning / Alert Highlight: Vivid Amber (`#d29922`)
+  - Monospace Data / Code: Vibrant Light Blue (`#79c0ff`)
+- **Typography**:
+  - Headings: Clean, modern Sans-serif (Inter, Segoe UI, Roboto) with bold weights
+  - Technical Data & Diagrams: Clean Monospace (SF Mono, Fira Code, Consolas)
+
+## 📐 Layout & Generation Directives for AI Engine
+1. **Diagram-First & Visual-Only**: On every slide, strictly maintain the Title and the visual Software Architecture Diagram. Do NOT replace or dilute diagrams into generic paragraphs or bullet lists.
+2. **Visual Box & Card Rendering**: Convert ASCII box-drawing diagrams into clean, high-contrast architectural cards, rounded boundary containers, and interactive topology maps with directional glowing arrows.
+3. **Technical Badging**: Highlight network ports (`:80`, `:9080`, `:15006`, `:15001`, `:15090`, `:9090`, `:3000`), protocols (`HTTP/1.1`, `gRPC xDS`, `mTLS`), and file paths as distinct rounded badge chips.
+4. **Multi-Tier Visual Groupings**: Ensure sharp visual separation between Edge Ingress, Service Mesh Data Plane, Control Plane, and SRE Observability layers.
+5. **Comparison Matrix (Slide 10)**: Render as a modern 2-column comparative balance sheet with alternating row highlights.
 
 ---
 
-# Slide 1: System Overview — The Cloud-Native Architectural Blueprint
-**Topic**: High-Level System Architecture & End-to-End Topology
-**Layout**: Top-Down Layered Architecture Diagram with 4 Distinct Tiers
-**Visual Prompt**: Modern enterprise cloud architecture diagram with 4 distinct horizontal tiers: Client Layer, L7 Ingress Gateway, Service Mesh Data Plane (4 polyglot microservices in Kubernetes pods with sidecars), and Observability Stack (Prometheus & Grafana). Cyan and indigo neon data lines on a dark obsidian background.
+# Slide 1: System Architecture — 4-Tier Cloud-Native Architecture Blueprint
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│ 1. EDGE INGRESS LAYER: Istio Ingress Gateway (Port 80/443)             │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ HTTP /productpage
-┌───────────────────────────────────▼────────────────────────────────────┐
-│ 2. APPLICATION MESH LAYER (Kubernetes Pods with Envoy Sidecars)        │
-│                                                                        │
-│   [ productpage ] (Python 3.12 / Flask) ── Aggregator & Web UI         │
-│          │                                                             │
-│          ├──> [ details ] (Ruby / Sinatra) ── Book Metadata            │
-│          └──> [ reviews ] (Java 17 / Open Liberty) ── Reviews v1/v2/v3 │
-│                     │                                                  │
-│                     └──> [ ratings ] (Node.js 18) ── Star Ratings      │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Envoy Telemetry (:15090/stats)
-┌───────────────────────────────────▼────────────────────────────────────┐
-│ 3. OBSERVABILITY LAYER: Prometheus TSDB & SRE Grafana Dashboards       │
-└────────────────────────────────────────────────────────────────────────┘
+========================================================================================================================
+ TIER 1: EDGE INGRESS GATEWAY (Public Edge Boundary)
+========================================================================================================================
+ [ Internet Client ] ──── HTTP GET /productpage ────> [ Istio Ingress Gateway (Envoy) ] :80/:443
+                                                      (Namespace: istio-system | Gateway: bookinfo-gateway)
+                                                                 │
+                                                                 │ ClusterIP Forwarding: http://productpage:9080
+=================================================================▼======================================================
+ TIER 2: SERVICE MESH DATA PLANE (Kubernetes default Namespace | Transparent mTLS with SPIFFE IDs)
+========================================================================================================================
+ ┌── [ Pod: productpage-v1-xxx ] (Ready 2/2) ────────────────────────────────────────────────────────────────────────┐
+ │  ┌─────────────────────────────────────────────────────────┐      ┌──────────────────────────────────────────┐    │
+ │  │ App Container: productpage (Python 3.12 / Flask / BFF)   │<────>│ Sidecar: istio-proxy (Envoy C++ Proxy)   │    │
+ │  │ Entrypoint: src/productpage/productpage.py (:9080)      │      │ Inbound: :15006 | Outbound: :15001       │    │
+ │  │ Logic: Jinja2 Templates, getForwardHeaders() Propagation│      │ Telemetry Port: :15090/stats/prometheus  │    │
+ │  └────────────────────────────┬────────────────────────────┘      └────────────────────┬─────────────────────┘    │
+ └───────────────────────────────┼────────────────────────────────────────────────────────┼──────────────────────────┘
+                                 │ HTTP Fan-Out (REST / JSON Contracts)                   │
+                ┌────────────────┴──────────────────────────────┐                         │ Mutual TLS Tunnel
+                │                                               │                         │ (STRICT Mode)
+ ┌──────────────▼──────────────────────────────────────┐  ┌─────▼─────────────────────────▼────────────────────────┐
+ │ Pod: details-v1-xxx (Ready 2/2)                     │  │ Pod: reviews-v1 / v2 / v3 (Ready 2/2)                  │
+ │ ┌──────────────────────┐  ┌───────────────────────┐ │  │ ┌───────────────────────┐  ┌─────────────────────────┐  │
+ │ │ App: details.rb      │  │ Sidecar: Envoy Proxy  │ │  │ │ App: reviews (Java 17) │  │ Sidecar: Envoy Proxy    │  │
+ │ │ Runtime: Ruby 3.1    │<─┤ Inbound :15006        │ │  │ │ Open Liberty (:9080)   │<─┤ Inbound :15006          │  │
+ │ │ Endpoint: /details/0 │  │ Outbound :15001       │ │  │ │ LibertyRestEndpoint.java│  │ Outbound :15001         │  │
+ │ └──────────────────────┘  └───────────────────────┘ │  │ └───────────┬───────────┘  └───────────┬─────────────┘  │
+ └─────────────────────────────────────────────────────┘  └─────────────┼──────────────────────────┼────────────────┘
+                                                                        │ HTTP GET /ratings/0      │ (v2 & v3 only)
+                                                          ┌─────────────▼──────────────────────────▼────────────────┐
+                                                          │ Pod: ratings-v1-xxx (Ready 2/2)                         │
+                                                          │ ┌───────────────────────┐  ┌─────────────────────────┐  │
+                                                          │ │ App: ratings.js       │  │ Sidecar: Envoy Proxy    │  │
+                                                          │ │ Runtime: Node.js 18   │<─┤ Inbound :15006          │  │
+                                                          │ │ Endpoint: /ratings/0  │  │ Outbound :15001         │  │
+                                                          │ └───────────────────────┘  └─────────────────────────┘  │
+                                                          └─────────────────────────────────────────────────────────┘
+========================================================================================================================
+ TIER 3: CONTROL PLANE & ORCHESTRATION                                TIER 4: OBSERVABILITY & SRE MONITORING
+========================================================================================================================
+ [ K8s Control Plane ]       [ Istio Control Plane: istiod ]         [ Prometheus Server :9090 ] ──> [ Grafana :3000 ]
+ - kube-apiserver (:6443)    - Pilot: xDS Config APIs over gRPC      - Pull Scrapes Envoy :15090      - Istio Mesh Dashboards
+ - etcd (:2379)              - Citadel: CA & mTLS SPIFFE Certs       - Local TSDB Storage Blocks      - Cross-Layer Analytics
+ - kube-controller-manager   - Galley: Validates K8s CRD YAMLs       - PromQL: RPS, P95, 5xx Ratios   - Real-Time SRE Alerts
+========================================================================================================================
 ```
-
-- **Architectural Vision**: Complete transition from brittle monolith to self-healing, polyglot microservices with zero-trust security and real-time observability.
-- **Presenter Script (1:00)**: "Good morning Committee. I am Tuong, presenting the software architecture of our cloud-native microservices platform. This architecture integrates four core polyglot microservices running in Kubernetes, governed by an Istio Service Mesh, and continuously monitored through Prometheus and Grafana. Today, I will walk you through each architectural layer in 10 minutes."
 
 ---
 
-# Slide 2: Microservices — Domain Decomposition & Architectural Principles
-**Topic**: Microservices Architecture & Domain-Driven Design (DDD)
-**Layout**: 2 Columns (Left: Bounded Context Domain Map | Right: Architectural Principles)
-**Visual Prompt**: Domain-driven design breakdown showing Monolith decomposing into 4 clean, isolated Bounded Contexts with discrete boundaries and REST API contracts.
+# Slide 2: Microservices Architecture — Domain Decomposition & Bounded Contexts
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                   DOMAIN-DRIVEN DESIGN BOUNDARIES                      │
-│                                                                        │
-│   ┌───────────────────────────┐     ┌──────────────────────────────┐   │
-│   │ CATALOG BOUNDED CONTEXT   │     │ FEEDBACK BOUNDED CONTEXT     │   │
-│   │ Service: details (Ruby)   │     │ Service: reviews (Java)      │   │
-│   │ Entity: Book Metadata     │     │ Entity: Reader Commentary    │   │
-│   └───────────────────────────┘     └──────────────┬───────────────┘   │
-│                                                    │ REST              │
-│   ┌───────────────────────────┐     ┌──────────────▼───────────────┐   │
-│   │ AGGREGATION CONTEXT       │     │ SCORING BOUNDED CONTEXT      │   │
-│   │ Service: productpage (Py) │     │ Service: ratings (Node.js)   │   │
-│   │ Pattern: Backend-for-Front│     │ Entity: 1-5 Star Ratings     │   │
-│   └───────────────────────────┘     └──────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
-```
+========================================================================================================================
+ DOMAIN DECOMPOSITION & BOUNDED CONTEXT ARCHITECTURE (Domain-Driven Design / DDD)
+========================================================================================================================
 
-- **Core Architectural Patterns**:
-  - **Single Responsibility Principle (SRP)**: Each service strictly owns a single business capability.
-  - **Database-per-Service**: Services maintain strict data sovereignty; direct database sharing is strictly prohibited.
-  - **Polyglot Design**: Right runtime for each workload (Python for templating, Ruby for metadata, Java for enterprise business logic, Node.js for async I/O).
-- **Presenter Script (2:00)**: "In Slide 2, we see how Domain-Driven Design eliminates monolithic coupling. We decompose the bookstore domain into four distinct Bounded Contexts. Each service is fully autonomous, communicates strictly via REST contracts, and encapsulates its own domain model. This guarantees that failure in ratings cannot bring down the entire catalog."
+                 [ Bounded Context: AGGREGATION & WEB PRESENTATION ]
+                 ┌───────────────────────────────────────────────────────────────┐
+                 │ Service Name:       productpage                               │
+                 │ Architectural Role: Backend-For-Frontend (BFF) / Aggregator   │
+                 │ Source Code:        src/productpage/productpage.py            │
+                 │ Runtime:            Python 3.12 / Flask / Jinja2              │
+                 │ Data Store:         Stateless (Aggregates downstream JSON)    │
+                 │ Responsibilities:   Session management, User Auth, Render UI  │
+                 └───────────────────────────────┬───────────────────────────────┘
+                                                 │
+                                                 │ Synchronous HTTP/1.1 REST Contracts
+                        ┌────────────────────────┴────────────────────────┐
+                        │                                                 │
+ [ Bounded Context: CATALOG METADATA ]           [ Bounded Context: READER FEEDBACK ]
+ ┌───────────────────────────────────────────┐   ┌───────────────────────────────────────────────────────────────┐
+ │ Service Name:       details               │   │ Service Name:       reviews                                   │
+ │ Architectural Role: Metadata Provider     │   │ Architectural Role: Feedback & Sentiment Processing           │
+ │ Source Code:        src/details/details.rb│   │ Source Code:        LibertyRestEndpoint.java (JAX-RS)         │
+ │ Runtime:            Ruby 3.1 / Sinatra    │   │ Runtime:            Java 17 / IBM Open Liberty                │
+ │ Data Store:         Embedded Mock Store   │   │ Revisions:          v1 (No Stars), v2 (Black), v3 (Red Stars) │
+ │ Bounded Entity:     Book (ISBN, Author,   │   │ Responsibilities:   Authoring reviews, Star aggregation       │
+ │                     Publisher, Pages)     │   └───────────────────────────────┬───────────────────────────────┘
+ └───────────────────────────────────────────┘                                   │
+                                                                                 │ Calls Scoring Context (v2 & v3)
+                                                 [ Bounded Context: NUMERICAL SCORING ]
+                                                 ┌───────────────────────────────────────────────────────────────┐
+                                                 │ Service Name:       ratings                                   │
+                                                 │ Architectural Role: Rating Calculation Engine                 │
+                                                 │ Source Code:        src/ratings/ratings.js                    │
+                                                 │ Runtime:            Node.js 18 / Express                      │
+                                                 │ Data Store:         In-Memory Store / Pluggable MySQL Backend │
+                                                 │ Bounded Entity:     Rating Scores (1 to 5 Stars per Reader)   │
+                                                 └───────────────────────────────────────────────────────────────┘
+
+========================================================================================================================
+ ARCHITECTURAL SPECIFICATIONS & DATA SOVEREIGNTY:
+ - Strict Database-per-Service: Zero cross-database queries; data access strictly crosses published REST API contracts.
+ - Polyglot Autonomy: Workloads matched to optimal runtimes (Python/UI, Ruby/Metadata, Java/Enterprise, Node.js/Async IO).
+ - Blast Radius Isolation: Complete failure of ratings context degrades UI to fallback, leaving core catalog operational.
+========================================================================================================================
+```
 
 ---
 
-# Slide 3: Bookinfo Application — Polyglot Implementation Architecture
-**Topic**: The Bookinfo Application Implementation & Inter-Service Wiring
-**Layout**: 2 Columns (Left: Fan-Out Aggregator Flow | Right: Code Architecture)
-**Visual Prompt**: Sequence diagram showing asynchronous fan-out from productpage to details and reviews, followed by reviews fetching ratings, with trace headers propagated along all hops.
+# Slide 3: Bookinfo Application — Polyglot Call Graph & Tracing Architecture
 
 ```text
-[ Client ] ──> [ productpage.py (Flask) ]
-                      │
-                      ├── (Async GET) ──> [ details.rb (Sinatra) ] :9080
-                      └── (Async GET) ──> [ reviews / LibertyRestEndpoint.java ] :9080
-                                                │ (v2 & v3 only)
-                                                └── (Async GET) ──> [ ratings.js ] :9080
-```
+========================================================================================================================
+ INTER-SERVICE CALL GRAPH, ASYNCHRONOUS FAN-OUT & TRACING CONTEXT PROPAGATION ARCHITECTURE
+========================================================================================================================
 
-- **Architectural Mechanics in Code**:
-  - **Aggregator Pattern (`productpage.py`)**: Concurrently dispatches asynchronous HTTP queries to downstream services and merges JSON payloads into Jinja2 templates.
-  - **Evolutionary Versioning (`LibertyRestEndpoint.java`)**: A single Java codebase dynamically toggles between v1 (no stars), v2 (black stars), and v3 (red stars) based on environment configuration.
-  - **Trace Propagation (`getForwardHeaders`)**: Crucial architectural hook forwarding `x-request-id` and `end-user: jason` across hops for distributed tracing and L7 routing.
-- **Presenter Script (3:00)**: "Slide 3 presents the concrete implementation of the Bookinfo application. The productpage service implements the Aggregator pattern, querying details and reviews in parallel. Notice our implementation of getForwardHeaders: it actively propagates tracing IDs and user identity down the call chain, providing the contextual fuel required for Istio's intelligent routing."
+ [ HTTP GET /productpage ] ──> productpage.py (Flask App Listening on Port :9080)
+                                     │
+                                     ├── [ Tracing & Identity Context Extraction: getForwardHeaders() ]
+                                     │   ├── x-request-id:          "c9a8f4b2-0192-4f32-8ab1-19d8e3b9a01f"
+                                     │   ├── x-b3-traceid:          "463ac35c9f6413ad"
+                                     │   ├── x-b3-spanid:           "2401f7c35d9213ef"
+                                     │   └── end-user (if logged):  "jason"  <── [ CANARY ROUTING TRIGGER HEADER ]
+                                     │
+                                     ├── [ ASYNC FAN-OUT 1: GET Book Details ]
+                                     │   │ URL: http://details:9080/details/0
+                                     │   │ Outbound Headers: { x-request-id, x-b3-traceid, end-user }
+                                     │   ▼
+                                     │   details.rb (Ruby Sinatra) ──> Returns JSON { id: 0, author: "William Shakespeare", ... }
+                                     │
+                                     └── [ ASYNC FAN-OUT 2: GET Book Reviews ]
+                                         │ URL: http://reviews:9080/reviews/0
+                                         │ Outbound Headers: { x-request-id, x-b3-traceid, end-user }
+                                         ▼
+                                         LibertyRestEndpoint.java (Java Open Liberty JAX-RS on Port :9080)
+                                         │
+                                         │── IF version == v1:
+                                         │   └── Returns JSON text reviews (NO outbound calls to ratings) ──────────┐
+                                         │                                                                          │
+                                         │── IF version == v2 OR v3:                                                │
+                                         │   │ Outbound HTTP GET http://ratings:9080/ratings/0                      │
+                                         │   │ Outbound Headers: { x-request-id, x-b3-traceid, end-user }          │
+                                         │   ▼                                                                      │
+                                         │   ratings.js (Node.js Express) ──> Returns { Reviewer1: 5, Reviewer2: 4 }│
+                                         │   │                                                                      │
+                                         │   ├── v2 merges scores as: [ BLACK STARS: ★★★★★ ] ───────────────────────┤
+                                         │   └── v3 merges scores as: [ RED STARS: ★★★★★ ] ─────────────────────────┤
+                                         │                                                                          │
+                                         ▼                                                                          ▼
+ [ Final HTML Response Rendered via Jinja2 Template ] <─────────────────────────────────────────────────────────────┘
+========================================================================================================================
+ CONCRETE CODE MAPPING (src/productpage/productpage.py):
+ - Forwarded: 'x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-sampled', 'x-b3-flags', 'x-ot-span-context', 'end-user'.
+ - Guarantees end-to-end distributed tracing continuity in Jaeger and Layer 7 routing evaluation in Envoy sidecars.
+========================================================================================================================
+```
 
 ---
 
-# Slide 4: Docker — Containerization & Multi-Stage Build Architecture
-**Topic**: Docker Container Architecture, Linux Kernel Primitives & Multi-Stage Builds
-**Layout**: 2 Columns (Left: Multi-Stage Build Flow | Right: Kernel Isolation Primitives)
-**Visual Prompt**: Diagram showing Docker multi-stage compilation: Heavy 850MB Gradle builder stage stripping away compilers and delivering a lean 210MB Open Liberty runtime container running as non-root user 1001.
+# Slide 4: Docker Architecture — Multi-Stage Build & Kernel Isolation Architecture
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│ MULTI-STAGE COMPILATION ARCHITECTURE (src/reviews/Dockerfile)          │
-│                                                                        │
-│   STAGE 1: BUILDER (gradle:7.3.3-jdk11)                                │
-│   [ Full Source Code ] + [ Gradle Toolchain ] ──> compile reviews.war  │
-│                                                          │             │
-│                                      COPY --from=builder │ (.war only) │
-│                                                          ▼             │
-│   STAGE 2: PRODUCTION RUNTIME (open-liberty:kernel-slim)               │
-│   [ reviews.war ] + [ server.xml ] (Zero Compilers / Non-Root 1001)    │
-│   Result: Image Footprint Slashed from 850MB ──> 210MB (75% Reduction) │
-└────────────────────────────────────────────────────────────────────────┘
-```
+========================================================================================================================
+ MULTI-STAGE DOCKERFILE ARCHITECTURE (src/reviews/Dockerfile) & LINUX CONTAINER PRIMITIVES
+========================================================================================================================
 
-- **Linux Kernel Primitives**: Namespaces (PID, NET, MNT process isolation), cgroups (strict CPU/RAM quotas), Overlay2 (Copy-on-Write immutable image layers).
-- **Security & Caching**: Non-root execution (`USER 1001`) prevents container breakout attacks; manifests copied prior to source code in Dockerfiles cuts CI/CD rebuilds from 3m to 5s.
-- **Presenter Script (4:00)**: "In Slide 4, we examine containerization architecture. A common anti-pattern is shipping compilers to production. We architected a Multi-Stage Dockerfile for reviews: Stage 1 builds the binary; Stage 2 extracts only the war file into a stripped runtime. This reduced our image size from 850MB to 210MB and eliminated attack surfaces."
+ STAGE 1: COMPILATION & PACKAGING (Heavyweight Builder Environment)
+ ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ Base Image:  gradle:7.3.3-jdk11 (Debian Base + JDK 11 + Gradle Toolchain | Image Footprint: ~850MB)                 │
+ │ Instructions:                                                                                                       │
+ │   WORKDIR /home/gradle/src                                                                                          │
+ │   COPY --chown=gradle:gradle . .                                                                                    │
+ │   RUN gradle build --no-daemon ──> Compiles Java classes, executes tests, packages artifact: reviews.war             │
+ └───────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┘
+                                                     │
+                                                     │ ARTIFACT EXTRACTION (Zero Compilers / Zero SDKs Carried Forward)
+                                                     │ COPY --from=builder .../reviews.war /config/apps/
+                                                     │ COPY --from=builder .../server.xml /config/
+                                                     ▼
+ STAGE 2: PRODUCTION RUNTIME (Ultra-Lean, Hardened Target Environment)
+ ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ Base Image:  open-liberty:21.0.0.12-kernel-slim-openj9-ubi (Red Hat UBI Minimal + OpenJ9 JRE | Footprint: ~210MB)   │
+ │ Security:    USER 1001 (Enforces Non-Root Execution | Drops all Linux capabilities to prevent host breakouts)       │
+ │ Network:     EXPOSE 9080 (Declares Container HTTP Port)                                                             │
+ │ Execution:   CMD ["server", "run"] ──> Spawns JVM Process as PID 1                                                  │
+ │ Impact:      Image size slashed by 75.3% (850MB ──> 210MB) | Attack surface stripped of all build utilities         │
+ └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+========================================================================================================================
+ LINUX KERNEL ISOLATION PRIMITIVES & LAYERED STORAGE ANATOMY
+========================================================================================================================
+ ┌─── HOST OPERATING SYSTEM KERNEL (Linux 5.15 / 6.x) ────────────────────────────────────────────────────────────────┐
+ │                                                                                                                    │
+ │  1. NAMESPACES (Process Boundary)    2. CGROUPS (Resource Ceilings)       3. OVERLAY2 (Layered Storage Engine)     │
+ │  - PID: reviews sees itself as PID 1 - cpu.cfs_quota_us: 100000 (1 Core)  - Read-Only Image Layer N (open-liberty)  │
+ │  - NET: Isolated virtual eth0 & port - memory.limit_in_bytes: 512MB       - Read-Only Image Layer N+1 (reviews.war) │
+ │  - MNT: Isolated rootfs container    - Prevents noisy-neighbor starvation - Writable Layer (Copy-on-Write / CoW)   │
+ └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-# Slide 5: Kubernetes — Cluster Orchestration & Self-Healing Architecture
-**Layout**: 2 Columns (Left: Control Plane vs Worker Topology | Right: The 2/2 Ready Pod Architecture)
-**Visual Prompt**: Kubernetes cluster diagram showing Control Plane API server and etcd coordinating worker nodes, zooming into a Pod containing both the app container and the Envoy sidecar container sharing localhost.
+# Slide 5: Kubernetes Architecture — Cluster Orchestration & Pod 2/2 Ready Architecture
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                   KUBERNETES ORCHESTRATION ARCHITECTURE                │
-│                                                                        │
-│   [ CONTROL PLANE: apiserver ──> etcd ──> scheduler ──> controller ]   │
-│                                    │ Reconciliation Loop (Desired State)│
-│   ┌────────────────────────────────▼───────────────────────────────┐   │
-│   │ WORKER NODE (kubelet + kube-proxy)                             │   │
-│   │                                                                │   │
-│   │   POD: productpage-v1-xxx [ READY 2/2 ]                        │   │
-│   │   ┌───────────────────────────┬────────────────────────────┐   │   │
-│   │   │ Container 1 (App):        │ Container 2 (Sidecar):     │   │   │
-│   │   │ Python / Flask (:9080)    │ istio-proxy / Envoy        │   │   │
-│   │   └─────────────▲─────────────┴─────────────▲──────────────┘   │   │
-│   │                 │ localhost (:15001/:15006) │                  │   │
-│   │                 └───────────────────────────┘                  │   │
-│   └────────────────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
-```
+========================================================================================================================
+ KUBERNETES CONTROL PLANE, WORKER NODE TOPOLOGY & RECONCILIATION LOOP
+========================================================================================================================
 
-- **Declarative Reconciliation Loop**: Desired state declared in `platform/kube/bookinfo.yaml` (Deployments, ClusterIP Services). Controllers continuously reconcile current state.
-- **Autonomous Self-Healing**: Health probes (Startup, Liveness, Readiness). When a Pod is terminated, ReplicaSets reschedule a replacement achieving **2/2 Ready in 2.1 seconds**.
-- **Presenter Script (5:00)**: "Slide 5 covers Kubernetes orchestration. We encapsulate services into atomic Pod units running two containers: the application and the Envoy sidecar proxy. Kubernetes continuously executes its reconciliation loop. When a pod crashes, the ReplicaSet controller detects the drift and restores a healthy 2/2 ready replacement within 2.1 seconds."
+ [ ADMINISTRATOR / CI-CD ] ──> kubectl apply -f platform/kube/bookinfo.yaml
+                                      │
+                                      ▼
+ ┌── CONTROL PLANE (Master Node) ─────────────────────────────────────────────────────────────────────────────────────┐
+ │  kube-apiserver (:6443) <──> etcd (:2379) (Distributed Consensus Key-Value Store: Desired Replicas = 1)          │
+ │        │                           ▲                                                                               │
+ │        ├──> kube-scheduler         │ Continuous Reconciliation Loop (Observe Actual State ──> Diff ──> Act)        │
+ │        └──> kube-controller-manager┘                                                                               │
+ └────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────┘
+                                      │ Kubelet gRPC RPC (Schedule & Launch Pod)
+ ┌── WORKER NODE ─────────────────────▼───────────────────────────────────────────────────────────────────────────────┐
+ │                                                                                                                    │
+ │  [ kubelet ] ──> CRI Runtime (containerd) ──> Manages Pod Lifecycles & Probes                                      │
+ │  [ kube-proxy ] ──> Manages iptables / IPVS Service Routing for ClusterIP: reviews (:9080)                         │
+ │                                                                                                                    │
+ │  ┌── POD: reviews-v1-7598cc9867-q2j5d [ STATUS: Running | READY: 2/2 ] ─────────────────────────────────────────┐  │
+ │  │                                                                                                             │  │
+ │  │   ┌──────────────────────────────────────────────┐    ┌──────────────────────────────────────────────────┐  │  │
+ │  │   │ Container 1 (Core Application):              │    │ Container 2 (Injected Infrastructure Sidecar):   │  │  │
+ │  │   │ Name: reviews                                │    │ Name: istio-proxy                                │  │  │
+ │  │   │ Image: examples-bookinfo-reviews-v1:1.20.0   │    │ Image: istio/proxyv2:1.20.0 (Envoy C++)          │  │  │
+ │  │   │ Port:  :9080 HTTP                            │    │ Ports: :15001 (Out), :15006 (In), :15090 (Stats) │  │  │
+ │  │   └──────────────────────▲───────────────────────┘    └────────────────────────▲─────────────────────────┘  │  │
+ │  │                          │                                                     │                            │  │
+ │  │                          └──────────── Shared Pod Network Namespace ───────────┘                            │  │
+ │  │                                        (localhost communication / Shared IPC)                               │  │
+ │  └─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘  │
+ └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+========================================================================================================================
+ EMPIRICALLY VERIFIED SELF-HEALING BENCHMARK:
+ 1. Failure Injection: kubectl delete pod -l app=productpage (Active serving pod killed).
+ 2. Failure Detection: ReplicaSet Controller detects drift (Available: 0/1) in milliseconds.
+ 3. Autonomous Recovery: Scheduler dispatches to healthy node; containerd initializes containers.
+ 4. Recovery Benchmark: Replacement Pod reaches STATUS: Running with READY: 2/2 in exactly 2.1 seconds!
+========================================================================================================================
+```
 
 ---
 
-# Slide 6: Istio — Service Mesh Control Plane & Data Plane Architecture
-**Topic**: Service Mesh Architecture, Transparent Packet Interception & L7 Routing
-**Layout**: 2-Tier Architecture Stack (Control Plane on Top | Data Plane Envoy Mesh Below)
-**Visual Prompt**: Istio architecture diagram: Control Plane istiod streaming xDS configurations over gRPC down to Envoy proxies, with Linux iptables redirecting incoming port 9080 traffic to port 15006 transparently.
+# Slide 6: Istio Service Mesh — Control Plane, Data Plane & Traffic Interception
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                 CONTROL PLANE: istiod (Pilot, Citadel, Galley)         │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ gRPC xDS Dynamic Configuration APIs
-┌───────────────────────────────────▼────────────────────────────────────┐
-│                 DATA PLANE: Transparent Envoy Sidecar Mesh             │
-│                                                                        │
-│   [ Inbound Traffic ] ──> iptables rule ──> Envoy Port :15006          │
-│                                                  │                     │
-│                                                  ▼ mTLS / L7 Routing   │
-│   [ Outbound Traffic ] <── iptables rule <── Envoy Port :15001         │
-└────────────────────────────────────────────────────────────────────────┘
-```
+========================================================================================================================
+ ISTIO CONTROL PLANE (istiod) & DATA PLANE (Envoy Proxy Interception & L7 Routing)
+========================================================================================================================
 
-- **Decoupling Network Concerns from Code**: Zero lines of routing or encryption code in application services.
-- **Core Custom Resource Definitions (CRDs)**:
-  - **Gateway (`bookinfo-gateway.yaml`)**: Edge cluster admission on port 80.
-  - **DestinationRule (`destination-rule-all.yaml`)**: Defines subsets `v1`, `v2`, `v3` and mTLS policies.
-  - **VirtualService (`virtual-service-reviews-test-v2.yaml`)**: L7 Canary rule routing header `end-user: jason` to `v2` (black stars) while general users stay on `v1`.
-- **Zero Trust Security**: Transparent mutual TLS (mTLS) with cryptographic SPIFFE IDs and `STRICT` peer authentication.
-- **Presenter Script (6:00)**: "Slide 6 illustrates the Istio Service Mesh architecture. Istio cleanly decouples L7 networking from code. Istiod translates declarative YAML into Envoy xDS APIs. Using iptables, all inbound packets are hijacked into Envoy port 15006. This enables Canary releases: by simply matching the end-user: jason header in a VirtualService, we route testers to reviews v2 without modifying a single line of Java code."
+ ┌── CONTROL PLANE: istiod (Daemon managing Mesh State in namespace: istio-system) ───────────────────────────────────┐
+ │  - Pilot:   Translates K8s Gateway, VirtualService & DestinationRule CRDs into Envoy xDS dynamic APIs over gRPC    │
+ │  - Citadel: Acts as Internal Certificate Authority; delivers X.509 certs & SPIFFE IDs via SDS for mTLS            │
+ │  - Galley:  Validates schema and syntax of incoming declarative networking YAMLs                                    │
+ └─────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────┘
+                                                       │ gRPC Stream (:15012 Dynamic xDS Configuration Discovery)
+ ┌── DATA PLANE (Pod Network Interception Architecture)─▼─────────────────────────────────────────────────────────────┐
+ │                                                                                                                    │
+ │  1. AUTOMATED SIDECAR INJECTION:                                                                                   │
+ │     Namespace labeled: istio-injection=enabled ──> K8s Mutating Admission Webhook injects istio-init & istio-proxy│
+ │                                                                                                                    │
+ │  2. PACKET INTERCEPTION ARCHITECTURE (Linux iptables NAT table in Pod Network Namespace):                         │
+ │                                                                                                                    │
+ │     [ INBOUND TCP PACKET ] ──> PREROUTING ──> Redirected by iptables to Envoy Port :15006                          │
+ │                                                                       │                                            │
+ │                                                                       ├──> Envoy decodes mTLS & evaluates L7 rules │
+ │                                                                       │                                            │
+ │     [ Application Container (:9080) ] <────── Delivered via localhost ┘                                            │
+ │              │                                                                                                     │
+ │              └────────────────> OUTPUT ──────> Redirected by iptables to Envoy Port :15001                         │
+ │                                                                       │                                            │
+ │                                                                       ▼ Envoy encrypts mTLS & routes to destination│
+ └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+========================================================================================================================
+ PRODUCTION CRD DECLARATION: CANARY ROUTING (networking/virtual-service-reviews-test-v2.yaml)
+========================================================================================================================
+ apiVersion: networking.istio.io/v1alpha3
+ kind: VirtualService
+ metadata: { name: reviews }
+ spec:
+   hosts: [ reviews ]
+   http:
+   - match:
+     - headers:
+         end-user: { exact: jason }   # <── L7 HTTP HEADER INSPECTION
+     route:
+     - destination: { host: reviews, subset: v2 }  # Tester "jason" routed to Reviews v2 (Black Stars)
+   - route:
+     - destination: { host: reviews, subset: v1 }  # All anonymous users routed to Reviews v1 (No Stars)
+========================================================================================================================
+```
 
 ---
 
-# Slide 7: Prometheus — Time-Series Monitoring & Pull-Based Scrape Architecture
-**Topic**: Systems Metrics Architecture, TSDB Storage & PromQL Engine
-**Layout**: 2 Columns (Left: Prometheus Server Data Flow | Right: PromQL Formulas)
-**Visual Prompt**: Prometheus scraping engine polling Envoy proxies on port 15090, writing to local TSDB blocks, and serving PromQL calculations to Grafana.
+# Slide 7: Prometheus Architecture — Time-Series Storage (TSDB) & Scrape Engine
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                     PROMETHEUS TSDB ARCHITECTURE                       │
-│                                                                        │
-│   [ Target Discovery ] ──> [ Scrape Manager ]                          │
-│                                   │ HTTP Pull (:15090/stats every 15s) │
-│                                   ▼                                    │
-│                            [ Local TSDB Blocks ]                       │
-│                                   │                                    │
-│                                   ▼                                    │
-│                            [ PromQL Engine ] ──> Instant/Range Vectors │
-└────────────────────────────────────────────────────────────────────────┘
-```
+========================================================================================================================
+ PROMETHEUS SERVER COMPONENT TOPOLOGY, SCRAPING ENGINE & TIME-SERIES STORAGE (TSDB)
+========================================================================================================================
 
-- **The Resilient Pull Model**: Prevents cascading DDoS outages common in push architectures during cluster incidents.
-- **Scraping Envoy Sidecars (`samples/addons/prometheus.yaml`)**: Prometheus scrapes `:15090/stats/prometheus` directly from Envoy without needing application-level instrumentation.
-- **Core PromQL Golden Signals**:
-  - **Throughput (RPS)**: `sum(rate(istio_requests_total{reporter="destination"}[1m])) by (destination_workload)`
-  - **Tail Latency (P95)**: `histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket[1m])) by (le))`
-  - **Error Budget (5xx)**: `(sum(rate(...{response_code=~"5.*"}[5m])) / sum(rate(...[5m]))) * 100`
-- **Presenter Script (7:00)**: "In Slide 7, we examine our monitoring architecture with Prometheus. Rather than pushing metrics, Prometheus uses a resilient pull model, scraping Envoy's telemetry port 15090 every 15 seconds. Using PromQL, we calculate real-time Requests Per Second and P95 latency percentiles. Notice we do not use mean latency: histogram quantiles expose tail latency that averages conceal."
+ ┌── PROMETHEUS SERVER ARCHITECTURE (Deployment in namespace: istio-system) ──────────────────────────────────────────┐
+ │                                                                                                                    │
+ │  1. KUBERNETES SERVICE DISCOVERY (Role: Pod)                                                                       │
+ │     Watches K8s API Server ──> Discovers Pods labeled with annotation: prometheus.io/port: "15090"                 │
+ │                                                                                                                    │
+ │  2. SCRAPE MANAGER (Pull-Based Retrieval Engine)                                                                   │
+ │     Executes HTTP GET every 15s ──> http://<Pod-IP>:15090/stats/prometheus                                         │
+ │                                            │                                                                       │
+ │                                            ├── Scrapes: istio_requests_total (Counter)                             │
+ │                                            └── Scrapes: istio_request_duration_milliseconds_bucket (Histogram)     │
+ │                                            │                                                                       │
+ │  3. TIME-SERIES DATABASE (TSDB Storage Engine) ◄──┘                                                                │
+ │     ┌────────────────────────┐      ┌────────────────────────┐      ┌──────────────────────────────────────────┐   │
+ │     │ In-Memory Head Block   │ ──>  │ WAL (Write-Ahead Log)  │ ──>  │ Persistent Compressed 2-Hour Disk Chunks│   │
+ │     │ (Append active samples)│      │ (Guarantees crash-safe)│      │ (Compact chunk files: data/<timestamp>/) │   │
+ │     └────────────────────────┘      └────────────────────────┘      └──────────────────────────────────────────┘   │
+ │                                                                                                                    │
+ │  4. PROMQL EVALUATION ENGINE ◄── Dispatches queries from Grafana Dashboard & Prometheus Web UI                     │
+ └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+========================================================================================================================
+ CONCRETE SRE PROMQL FORMULAS EXECUTED ON REAL TELEMETRY:
+ 1. Requests Per Second (Throughput by Workload):
+    sum(rate(istio_requests_total{reporter="destination"}[1m])) by (destination_workload)
+ 2. 95th Percentile Tail Latency (P95 Latency Formula):
+    histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_workload="productpage-v1"}[1m])) by (le))
+ 3. 5xx Server Error Ratio (SLO Compliance Tracking):
+    (sum(rate(istio_requests_total{reporter="destination", response_code=~"5.*"}[5m])) / sum(rate(istio_requests_total{reporter="destination"}[5m]))) * 100
+========================================================================================================================
+```
 
 ---
 
-# Slide 8: Grafana — SRE Observability & Telemetry Correlation Architecture
-**Topic**: Grafana Visualization Architecture, Dynamic Dashboards & Cross-Layer Correlation
-**Layout**: 2-Panel Stack (Top: Istio Service Telemetry | Bottom: Node Hardware Saturation)
-**Visual Prompt**: Grafana command dashboard showing an upper graph of traffic burst to 50 req/s aligning with a lower graph of container CPU spiking from 15% to 92%, proving CPU saturation as the root cause of latency.
+# Slide 8: Grafana Architecture — SRE Observability & Telemetry Correlation Architecture
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│ TIER 1: SERVICE MESH TELEMETRY (Istio Service Dashboard)               │
-│ Traffic Burst: 10 req/s  ──>  50 req/s (Spike)                         │
-│ P95 Latency:   35ms      ──>  280ms                                    │
-├────────────────────────────────────────────────────────────────────────┤
-│ TIER 2: INFRASTRUCTURE SATURATION (cAdvisor Container Metrics)         │
-│ Container CPU: 15%       ──>  92% (CPU Throttling Threshold Reached)   │
-│ Container RAM: 64MB      ──>  118MB                                    │
-└────────────────────────────────────────────────────────────────────────┘
-```
+========================================================================================================================
+ GRAFANA SRE VISUALIZATION ARCHITECTURE & CROSS-LAYER TELEMETRY CORRELATION
+========================================================================================================================
 
-- **Config-as-Code Provisioning (`samples/addons/grafana.yaml`)**: DataSources and Istio dashboards mounted automatically via ConfigMaps at startup.
-- **Dynamic Templating**: Variables (`$namespace`, `$service`, `$workload`) allow a single dashboard definition to adapt dynamically to all cluster services.
-- **Root-Cause Telemetry Correlation**: By placing network latency panels directly above container CPU panels, SREs instantly verify whether latency spikes stem from code deadlocks or CPU throttling.
-- **Presenter Script (8:00)**: "Slide 8 demonstrates Grafana's visualization architecture. Grafana serves as our SRE Single Pane of Glass. By correlating Istio's L7 request latency with cAdvisor's container CPU metrics on a single screen, we solve the classic incident mystery: when P95 latency jumps to 280ms, we immediately see container CPU hitting 92%, pinpointing CPU throttling as the root cause."
+ ┌── GRAFANA SERVER ARCHITECTURE (Port :3000) ────────────────────────────────────────────────────────────────────────┐
+ │                                                                                                                    │
+ │  1. AUTOMATED DATASOURCE PROVISIONING (samples/addons/grafana.yaml):                                               │
+ │     ConfigMap automatically injects Prometheus proxy endpoint: http://prometheus:9090 (Zero manual UI setup)       │
+ │                                                                                                                    │
+ │  2. DYNAMIC DASHBOARD TEMPLATING:                                                                                  │
+ │     Dropdown Filters: [$namespace = default] ──> [$service = reviews] ──> [$workload = reviews-v2]                 │
+ │     Query: label_values(istio_requests_total{destination_workload_namespace="$namespace"}, destination_service)     │
+ └───────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────┘
+                                                     │
+                                                     ▼ Renders Unified Cross-Layer Diagnostic Screen
+========================================================================================================================
+ ROOT-CAUSE CORRELATION: SERVICE MESH TELEMETRY vs INFRASTRUCTURE SATURATION (Single Pane of Glass)
+========================================================================================================================
+
+ PANEL 1: ISTIO SERVICE LATENCY (Application Layer Telemetry from Envoy Proxies)
+ ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │  Latency (ms)                                                                                                      │
+ │  300ms ─────────────────────────────────────────────────────────────/\  <── [ P95 Latency Spike: 280ms ]          │
+ │  200ms ────────────────────────────────────────────────────────────/  \                                            │
+ │  100ms ───────────────────────────────────────────────────────────/    \                                           │
+ │    0ms ─── Baseline: 35ms ───────────────────────────────────────/      \────────────────────────────────────────  │
+ └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+ PANEL 2: CONTAINER CPU UTILIZATION (Infrastructure Hardware Layer from cAdvisor / Kubelet)
+ ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │  CPU Quota (%)                                                                                                     │
+ │  100% ───────────────────────────────────────────────────────████████████  <── [ CPU Throttled at 92% of Limit ]   │
+ │   50% ───────────────────────────────────────────────────────████████████                                          │
+ │    0% ─── Baseline: 15% ─────────────────────────────────────████████████────────────────────────────────────────  │
+ └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ DIAGNOSTIC VERDICT: Latency surge to 280ms correlates 1-to-1 with container CPU throttling; proven infrastructure bottleneck!
+========================================================================================================================
+```
 
 ---
 
-# Slide 9: Live Verification — 4-Step End-to-End Architectural Demonstration
-**Topic**: Practical System Verification, Chaos Testing & Resilience Validation
-**Layout**: 4 Sequenced Milestone Cards
-**Visual Prompt**: 4-step execution timeline: Automated Deployment ➔ Baseline Round-Robin ➔ Canary User Jason Black Stars ➔ Fault Injection 7s Latency Fallback.
+# Slide 9: Live Verification — 4-Step Architectural Runbook & Chaos Resilience
 
 ```text
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   STEP 1     │     │   STEP 2     │     │   STEP 3     │     │   STEP 4     │
-│ Automated    │────>│ Baseline     │────>│ Canary       │────>│ Fault        │
-│ Bootstrap    │     │ Verification │     │ Routing      │     │ Injection    │
-│ .\setup-     │     │ Round-Robin  │     │ User "jason" │     │ 7s Delay     │
-│ and-run.ps1  │     │ v1 / v2 / v3 │     │ v2 BlackStar │     │ Fallback OK  │
-└──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
-```
+========================================================================================================================
+ 4-STEP PRACTICAL VERIFICATION RUNBOOK & EXPERIMENTAL RESILIENCE ARCHITECTURE
+========================================================================================================================
 
-- **Step 1: Automated Deployment**: `setup-and-run.ps1` bootstraps K8s manifests, injects Envoy sidecars, and provisions Prometheus/Grafana.
-- **Step 2: Baseline Validation**: Access `http://localhost/productpage`. Browser refreshes alternate between reviews v1, v2, and v3 via K8s round-robin.
-- **Step 3: Canary L7 Routing**: Apply `virtual-service-reviews-test-v2.yaml`. Logging in as user `jason` exclusively renders v2 (Black Stars); logging out instantly reverts to v1 (No Stars).
-- **Step 4: Chaos Resilience**: Inject 7-second delay on `ratings`. Productpage gracefully serves fallback text without hanging or crashing!
-- **Presenter Script (9:00)**: "Slide 9 outlines our live verification runbook. First, our automated script provisions the entire stack. Second, baseline traffic alternates across all three review versions. Third, we apply our Canary rule: logging in as user jason consistently displays v2 Black Stars, while guest visitors see v1. Finally, we inject a 7-second fault into ratings; the system falls back gracefully, proving resilience against cascading failures."
+ ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ STEP 1: AUTOMATED INFRASTRUCTURE DEPLOYMENT                                                                         │
+ │ - Command: .\setup-and-run.ps1 (PowerShell Automation Engine)                                                       │
+ │ - Actions: Deploys 6 Deployments, 4 ClusterIP Services, injects Envoy sidecars, provisions Gateway & Addons.        │
+ │ - Verification: kubectl get pods ──> Confirms 6/6 pods reach STATUS: Running with READY: 2/2 containers.            │
+ └───────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┘
+                                                     │
+                                                     ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ STEP 2: BASELINE SYSTEM BEHAVIOR (Round-Robin Verification)                                                         │
+ │ - Action: Access http://localhost/productpage in web browser.                                                       │
+ │ - Mechanism: Default K8s Service round-robins across reviews-v1, reviews-v2, reviews-v3.                            │
+ │ - Result: Refreshing page alternates smoothly: No Stars (v1) ──> Black Stars (v2) ──> Red Stars (v3).               │
+ └───────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┘
+                                                     │
+                                                     ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ STEP 3: LAYER 7 CANARY TRAFFIC ROUTING (QA Validation for User "jason")                                             │
+ │ - Command: kubectl apply -f networking/virtual-service-reviews-test-v2.yaml                                         │
+ │ - Test A (Anonymous Guest): Refresh page ──> 100% routed to reviews-v1 (Zero Stars rendered).                       │
+ │ - Test B (Sign In as "jason"): Envoy matches header end-user: jason ──> 100% routed to reviews-v2 (Black Stars).     │
+ │ - Proof: Zero application code modifications required to execute dynamic canary traffic shifting!                   │
+ └───────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┘
+                                                     │
+                                                     ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ STEP 4: CHAOS ENGINEERING & RESILIENCE (Fault Injection Verification)                                               │
+ │ - Command: kubectl apply -f networking/virtual-service-ratings-test-delay.yaml                                       │
+ │ - Action: Injects 7.0-second delay into 100% of calls to ratings for user "jason".                                  │
+ │ - Result: Reviews microservice timeout triggers gracefully; renders book details with review text fallback.         │
+ │ - Verdict: Cascading failure successfully prevented; core catalog browsing remains 100% available!                 │
+ └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-# Slide 10: Architectural Retrospective — Monolith vs Cloud-Native Mesh
-**Topic**: Comprehensive Architectural Trade-offs & Production Evaluation
-**Layout**: 2-Column Balance Sheet (Architectural Superpowers vs Concrete System Costs)
-**Visual Prompt**: Balance scales weighing Architectural Agility against Operational Infrastructure Complexity, with Cloud-Native best practices mitigating costs.
+# Slide 10: Architectural Retrospective — Monolith vs Cloud-Native Mesh Trade-offs
 
-| Architectural Dimension | Traditional Monolith | Cloud-Native Microservices & Mesh |
-|---|---|---|
-| **Technology Strategy** | Single language lock-in | **Polyglot Flexibility**: Optimal runtime per service |
-| **Deployability** | High-risk full-app redeployment | **Independent Deployability**: Zero downtime rollouts |
-| **Failure Blast Radius** | Cascading: single bug crashes process | **Isolated**: Ratings failure leaves catalog operational |
-| **Security Architecture** | Perimeter firewall only | **Zero Trust**: Universal mTLS & SPIFFE workload identity |
-| **Operational Overhead** | Low (Single binary, single server) | **High**: Demands K8s orchestration & Istio service mesh |
-| **Network Hop Latency** | Near zero (in-memory calls) | **Overhead**: +1.5ms to 3ms per sidecar hop |
+```text
+========================================================================================================================
+ ARCHITECTURAL TRADE-OFFS & PRODUCTION EVALUATION MATRIX (Monolith vs Cloud-Native Mesh)
+========================================================================================================================
 
-- **Conclusion**: The architectural benefits of resilience, independent velocity, and zero-trust security overwhelmingly justify the operational investments in Kubernetes and Istio.
-- **Presenter Script (10:00)**: "To conclude in Slide 10: migrating from a Monolith to a Cloud-Native Mesh is an engineering trade-off. We pay a budget of 30MB of RAM per sidecar and 1.5ms of hop latency. In return, we achieve total team autonomy, zero-trust cryptographic security, sub-3-second self-healing, and complete operational observability. Thank you Committee, I am now ready for your questions."
+ ┌───────────────────────────────────────┬───────────────────────────────────┬────────────────────────────────────────┐
+ │ ARCHITECTURAL DIMENSION               │ TRADITIONAL MONOLITHIC DESIGN     │ CLOUD-NATIVE MICROSERVICES & MESH      │
+ ├───────────────────────────────────────┼───────────────────────────────────┼────────────────────────────────────────┤
+ │ Technology Flexibility & Polyglot     │ Enforced single programming stack │ Unconstrained runtime selection:       │
+ │                                       │ for entire corporate system       │ Python / Ruby / Java / Node.js         │
+ ├───────────────────────────────────────┼───────────────────────────────────┼────────────────────────────────────────┤
+ │ Deployability & Velocity              │ High-risk full application build  │ Granular zero-downtime rollouts via    │
+ │                                       │ and deployment cycles             │ independent Kubernetes Deployments     │
+ ├───────────────────────────────────────┼───────────────────────────────────┼────────────────────────────────────────┤
+ │ Fault Isolation & Blast Radius        │ Fragile: Single memory leak or    │ Highly Resilient: Ratings failure      │
+ │                                       │ uncaught exception crashes host   │ isolated; Productpage degrades safely  │
+ ├───────────────────────────────────────┼───────────────────────────────────┼────────────────────────────────────────┤
+ │ Security & Encryption Architecture    │ Perimeter firewall only; plaintext│ Universal Zero Trust: Transparent mTLS │
+ │                                       │ communications inside perimeter   │ with short-lived SPIFFE certificates   │
+ ├───────────────────────────────────────┼───────────────────────────────────┼────────────────────────────────────────┤
+ │ Compute Resource Footprint            │ Minimal overhead: In-memory calls │ Sidecar Tax: Each Pod consumes         │
+ │                                       │ with zero container proxies       │ an additional 30MB–50MB RAM for Envoy  │
+ ├───────────────────────────────────────┼───────────────────────────────────┼────────────────────────────────────────┤
+ │ Network Latency Penalty               │ Microseconds: Direct in-process   │ +1.5ms to 3.0ms added hop latency      │
+ │                                       │ memory pointer passing            │ through two Envoy sidecar proxies      │
+ ├───────────────────────────────────────┼───────────────────────────────────┼────────────────────────────────────────┤
+ │ Operational & Cognitive Complexity    │ Low: Single CI/CD pipeline and    │ High: Demands Kubernetes orchestration,│
+ │                                       │ single server monitoring agent    │ Service Mesh CRDs, and SRE Observabili.│
+ └───────────────────────────────────────┴───────────────────────────────────┴────────────────────────────────────────┘
 
+========================================================================================================================
+ FINAL ARCHITECTURAL VERDICT:
+ The operational investment in Kubernetes, Istio, Prometheus, and Grafana pays massive dividends in team autonomy,
+ zero-trust security, sub-3-second autonomous self-healing, and absolute operational observability at scale.
+========================================================================================================================
+```
