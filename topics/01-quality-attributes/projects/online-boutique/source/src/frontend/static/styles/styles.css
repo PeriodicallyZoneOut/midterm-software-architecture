@@ -1,59 +1,193 @@
 /**
- * Copyright 2020 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Online Boutique - Modernized High-End Cloud-Native Storefront
+ * Software Architecture Midterm Demo (Topic 01: Quality Attributes)
  */
 
-/* General */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --bg-main: #f8fafc;
+  --surface: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-light: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 20px 30px -10px rgba(79, 70, 229, 0.2);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+}
+
+/* General Reset & Layout */
 html, body {
   height: 100%;
+  background-color: var(--bg-main);
 }
 
 body {
-  color: #111111;
-  font-family: 'DM Sans', sans-serif;
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Header */
-
+/* Header Styling */
 header {
-  background-color: #853B5C;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-/*
-This allows the sub-navbar (white strip containing logo)
-to be as wide as the browser window.
-*/
 header > div:nth-child(2).navbar.sub-navbar {
   padding-left: 0;
   padding-right: 0;
 }
+
 header > div:nth-child(2) > .container {
-  max-width: none;
+  max-width: 1280px;
 }
 
+/* Top Notification Banner */
+header .navbar {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+header .h-free-shipping {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: #c7d2fe;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+header .h-free-shipping::before {
+  content: "✨";
+}
+
+/* Sub-Navbar (Main Bar) */
+header .navbar.sub-navbar {
+  height: 72px;
+  background-color: #ffffff;
+  font-size: 15px;
+  color: var(--text-main);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--border-light);
+}
+
+header .navbar.sub-navbar > .container {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+header .top-left-logo,
+header .top-left-logo-cymbal {
+  height: 38px;
+  transition: transform 0.2s ease;
+}
+
+header .navbar-brand:hover img {
+  transform: scale(1.04);
+}
+
+header .h-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+header .h-control {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-left: 0;
+}
+
+/* Modern Currency Dropdown */
+header .h-control select {
+  background: #f8fafc;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  height: 40px;
+  padding: 0 32px 0 38px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+header .h-control select:hover,
+header .h-control select:focus {
+  border-color: var(--primary);
+  background-color: #ffffff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+header img.currency-icon, 
+header span.currency-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  pointer-events: none;
+  z-index: 2;
+}
+
+header .icon.arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Cart Button */
 header .cart-link {
   position: relative;
-  display: block;
-  margin-left: 25px;
   display: flex;
-  flex-flow: column;
   align-items: center;
   justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: #f1f5f9;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  margin-left: 10px;
+}
+
+header .cart-link:hover {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+header .cart-link img {
+  width: 22px;
+  height: 22px;
 }
 
 header .cart-size-circle {
@@ -61,617 +195,327 @@ header .cart-size-circle {
   align-items: center;
   justify-content: center;
   position: absolute;
-  top: 24px;
-  left: 11px;
-  width: 16px;
-  height: 16px;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
   font-size: 11px;
-  border-radius: 4px 4px 0 4px;
+  font-weight: 700;
+  border-radius: 9999px;
   color: white;
-  background-color: #853B5C;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.5);
+  border: 2px solid #ffffff;
 }
 
-header .navbar {
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-header .h-free-shipping {
-  font-size: 14px;
-}
-
-header .h-controls {
-  display: flex;
-  justify-content: flex-end;
-}
-
-header .h-control {
-  display: flex;
-  align-items: center;
-  font-size: 12px;
-  position: relative;
-  margin-left: 40px;
-  color: #605f64;
-}
-
-header .h-control:first-child {
-  margin-left: 0;
-}
-
-header .h-control input {
-  border: none;
-  padding: 0 31px 0 31px;
-  width: 250px;
-  height: 24px;
-  flex-shrink: 0;
-  background-color: #f2f2f2;
-  display: flex;
-  align-items: center;
-}
-
-header .h-control input:focus {
-  outline: 0;
-  border: 0;
-  box-shadow: 0;
-}
-
-header .icon {
-  width: 20px;
-  height: 20px;
-}
-
-header .icon.search-icon {
-  width: 12px;
-  height: 13px;
-  position: absolute;
-  left: 10px;
-}
-
-/* The currency drop-down. */
-
-header img.currency-icon, header span.currency-icon {
-  position: relative;
-  left: 35px;
-  top: -1px;
-  width: 20px;
-  display: inline-block;
-  height: 20px;
-}
-
-header span.currency-icon {
-  font-size: 16px;
-  text-align: center;
-}
-
-header .h-control select {
-  display: flex;
-  align-items: center;
-  background: transparent;
-  border-radius: 0;
-  border: 1px solid #acacac;
-  width: 130px;
-  height: 40px;
-  flex-shrink: 0;
-  padding: 1px 0 0 45px;
-  font-size: 16px;
-  border-radius: 8px;
-}
-
-header .icon.arrow {
-  position: absolute;
-  right: 25px;
-  width: 10px;
-  height: 5px;
-}
-
-header .h-control::-webkit-input-placeholder {
-  /* Chrome/Opera/Safari */
-  font-size: 12px;
-  color: #605f64;
-}
-
-header .h-control::-moz-placeholder {
-  /* Firefox 19+ */
-  font-size: 12px;
-  color: #605f64;
-}
-
-header .h-control :-ms-input-placeholder {
-  /* IE 10+ */
-  font-size: 12px;
-  color: #605f64;
-}
-
-header .h-control :-moz-placeholder {
-  /* Firefox 18- */
-  font-size: 12px;
-  color: #605f64;
-}
-
-header .navbar.sub-navbar {
-  height: 60px;
-  background-color: white;
-  font-size: 15px;
-  color: #b4b2bb;
-  padding-top: 0;
-  padding-bottom: 0;
-  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
-  z-index: 1; /* Need this to see the box-shadow on the home page. */
-}
-
-header .navbar.sub-navbar > .container {
-  padding-left: 26px;
-  padding-right: 26px;
-}
-
-header .top-left-logo {
-  height: 40px;
-}
-
-header .top-left-logo-cymbal {
-  height: 30px;
-}
-
-header .navbar.sub-navbar .navbar-brand {
-  padding: 0;
-}
-
-header .navbar.sub-navbar a {
-  color: #b4b2bb;
-}
-
-header .navbar.sub-navbar nav a {
-  margin: 0 10px;
-}
-
-header .navbar.sub-navbar .controls {
-  display: flex;
-  height: 60px;
-}
-
-header .navbar.sub-navbar .controls a img {
-  width: 20px;
-  height: 20px;
-  margin-bottom: 3px;
-}
-
-/* Footer */
-
-footer.py-5 {
-  flex-shrink: 0;
-  padding: 0 !important;
-}
-
-footer .footer-top {
-  padding: 60px 0px;
-  background-color: #570D2E;
-  color: white;
-}
-
-footer .footer-top a {
-  color: white;
-  text-decoration: underline;
-}
-
-/* The <p> containing the session-id. */
-footer .footer-top p:nth-child(3) {
-  margin-top: 56px;
-}
-
-footer .footer-top .footer-social,
-footer .footer-top .footer-app,
-footer .footer-links,
-footer .footer-top .social,
-footer .footer-top .app {
-  display: block;
-  align-items: center;
-}
-
-footer .footer-top .footer-social {
-  padding: 31px;
-}
-
-footer .footer-top .footer-social h4 {
-  margin-bottom: 0;
-}
-
-footer .footer-top .footer-social div {
-  width: 50%;
-}
-
-/* Home */
-
+/* Main Container & Hero */
 main {
   flex: 1 0 auto;
-  background-color: #F9F9F9;
+  background-color: var(--bg-main);
+  padding-bottom: 60px;
 }
 
-@media (min-width: 992px) {
-  .home .container-fluid {
-    height: calc(100vh - 91px); /* 91px is the height of the top/header bars. */
-  }
-  .home .container-fluid > .row > .col-4 {
-    height: calc(100vh - 91px);
-  }
-  .home .container-fluid > .row > .col-lg-8 {
-    height: calc(100vh - 91px);
-    overflow-y: scroll;
-  }
-
-  .px-10-percent {
-    padding-left: 10%;
-    padding-right: 10%;
-  }
+.home .container-fluid {
+  max-width: 1320px;
+  margin: 0 auto;
 }
 
-.home-mobile-hero-banner {
-  height: 200px;
-  background: url(/static/images/folded-clothes-on-white-chair-wide.jpg) no-repeat top center;
-  background-size: cover;
+/* Say Hello Interactive Widget */
+.home section.my-4 {
+  background: #ffffff;
+  padding: 24px 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 32px !important;
+  margin-bottom: 40px !important;
+  position: relative;
+  overflow: hidden;
 }
 
-.home-desktop-left-image {
-  background: url(/static/images/folded-clothes-on-white-chair.jpg) no-repeat center;
-  background-size: cover;
+.home section.my-4::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--primary), var(--accent));
 }
 
+.home section.my-4 h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.home section.my-4 .btn.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  transition: all 0.2s ease;
+}
+
+.home section.my-4 .btn.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45);
+}
+
+/* Hot Products Header */
 .hot-products-row h3 {
-  margin-bottom: 32px;
-  margin-top: 56px;
-  font-size: 36px;
-  font-weight: normal;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-main);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
+.hot-products-row h3::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+  margin-left: 16px;
+}
+
+/* Product Cards Grid */
 .hot-products-row {
-  padding-bottom: 70px;
-  padding-left: 10%;
-  padding-right: 10%;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
-.hot-product-card  {
-  margin-bottom: 52px;
-  padding-left: 16px;
-  padding-right: 16px;
+.hot-product-card {
+  margin-bottom: 36px;
+  padding: 0 14px;
+}
+
+.hot-product-card > a:first-child {
+  display: block;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.hot-product-card:hover > a:first-child {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+  border-color: #cbd5e1;
 }
 
 .hot-product-card img {
   width: 100%;
-  height: auto;
-  border-radius: 20% 0 20% 20%;
+  height: 270px;
+  object-fit: cover;
+  border-radius: 0 !important;
+  transition: transform 0.4s ease;
 }
 
-.hot-product-card-name {
-  margin-top: 8px;
-  font-size: 18px;
-}
-
-.hot-product-card-price {
-  font-size: 14px;
-}
-
-.hot-product-card > a:first-child {
-  position: relative;
-  display: block;
+.hot-product-card:hover img {
+  transform: scale(1.05);
 }
 
 .hot-product-card-img-overlay {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  top: 0;
-  left: 0;
-  border-radius: 20% 0 20% 20%;
-  background-color: transparent;
+  display: none !important;
 }
 
-.hot-product-card:hover .hot-product-card-img-overlay {
-  background-color: rgba(71, 0, 29, 0.2);
+/* Product Card Details */
+.hot-product-card > div:last-child {
+  padding: 16px 4px 8px 4px;
 }
 
-/*
-This chunk ensures the left/right padding of the footer is
-similar to that of the hot-products-row.
-*/
-.home-desktop-footer-row {
-  padding-left: 9%;
-  padding-right: 9%;
-  background-color: #570D2E;
-  width: 100%;
-  margin: 0;
+.hot-product-card-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 4px;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
 }
 
-/* Ad */
-
-.ad {
-  position: relative;
-  background-color: #FF9A9B;
-  font-size: 24px;
-  text-align: center;
+.hot-product-card:hover .hot-product-card-name {
+  color: var(--primary);
 }
 
-/* "Ad" text. */
-.ad strong {
-  position: absolute;
-  top: 6px;
-  left: 12px;
-  font-size: 14px;
-  font-weight: normal;
+.hot-product-card-price {
+  display: inline-block;
+  background: var(--success-bg);
+  color: #065f46;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
 }
 
-.ad a {
-  color: black;
-}
-
-/* Product */
-
+/* Product Detail Page */
 .h-product {
-  margin-top: 56px;
-  margin-bottom: 112px;
+  margin-top: 48px;
+  margin-bottom: 80px;
   max-width: 1200px;
-  background-color: #F9F9F9;
-}
-
-.h-product > .row {
-  align-items: flex-end;
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-md);
 }
 
 .h-product .product-image {
   width: 100%;
-  border-radius: 20% 20% 0 20%;
-}
-
-.h-product .product-price {
-  font-size: 28px;
-}
-
-.h-product .product-info .product-wrapper {
-  margin-left: 15px;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md);
+  object-fit: cover;
 }
 
 .h-product .product-info h2 {
-  margin-bottom: 16px;
-  margin-top: 16px;
-  font-size: 56px;
-  line-height: 1.14;
-  font-weight: normal;
-  color: #111111;
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 12px;
 }
 
-.h-product .product-packaging {
-  margin: 0 0 15px 0;
-}
-
-.h-product .product-packaging h3 {
-  font-size: 20px;
-}
-
-.h-product .product-packaging span {
-  display: inline-block;
-  margin: 0 10px 0 0;
-}
-
-.h-product .input-group-text,
-.h-product .btn.btn-info {
-  font-size: 18px;
-  line-height: 1.89;
-  letter-spacing: 3.6px;
-  text-align: center;
-  color: #111111;
-  border-radius: 0;
-}
-
-.product-quantity-dropdown {
-  position: relative;
-  width: 100px;
-}
-
-.product-quantity-dropdown select {
-  width: 100%;
-  height: 45px;
-  border: 1px solid #acacac;
-  padding: 10px 16px;
-  border-radius: 8px;
-}
-
-.product-quantity-dropdown img {
-  position: absolute;
-  right: 25px;
-  top: 20px;
-  width: 10px;
-  height: 5px;
-}
-
-.h-product .cymbal-button-primary {
-  margin-top: 16px;
-}
-
-/* Platform Banner */
-
-.local,
-.aws-platform,
-.onprem-platform,
-.azure-platform,
-.alibaba-platform,
-.gcp-platform {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 10px;
-  height: 100vh;
-  color: white;
-  font-size: 24px;
-  z-index: 999;
-}
-
-.aws-platform,
-.aws-platform .platform-flag {
-  background-color: #ff9900;
-}
-
-.onprem-platform,
-.onprem-platform .platform-flag {
-  background-color: #34A853;
-}
-
-.gcp-platform,
-.gcp-platform .platform-flag {
-  background-color: #4285f4;
-}
-
-
-.azure-platform,
-.azure-platform .platform-flag {
-  background-color: #f35426;
-}
-
-.alibaba-platform,
-.alibaba-platform .platform-flag {
-  background-color: #ffC300;
-}
-
-.local,
-.local .platform-flag {
-  background-color: #2c0678;
-}
-
-.platform-flag {
-  position: absolute;
-  top: 98px;
-  left: 0;
-  width: 190px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Recommendation */
-
-.recommendations {
-  background: #F9F9F9;
-  padding-bottom: 55px;
-}
-
-.recommendations .container {
-  max-width: 1174px;
-}
-
-@media (max-width: 992px) {
-  .recommendations .container {
-    max-width: none;
-  }
-}
-
-.recommendations h2 {
-  border-top: solid 1px;
-  padding: 40px 0;
-  font-weight: normal;
-  text-align: center;
-}
-
-.recommendations h5 {
-  margin-top: 8px;
-  font-weight: normal;
-  font-size: 18px;
-}
-
-.recommendations img {
-  height: 100%;
-  width: 100%;
-  border-radius: 20% 0 20% 20%;
-}
-
-select {
-  -webkit-appearance: none;
-  -webkit-border-radius: 0px;
-}
-
-/* Cymbal */
-
-/*
-If we ever decide to create a separate Cymbal CSS library for Cymbal components,
-the rules below could be extracted.
-*/
-
-.cymbal-button-primary, .cymbal-button-secondary {
-  display: inline-block;
-  border: solid 1px #CE0631;
-  padding: 8px 16px;
-  outline: none;
-  font-size: 14px;
-  border-radius: 22px;
-  cursor: pointer;
-}
-
-.cymbal-button-primary:focus, .cymbal-button-secondary:focus {
-  outline: none; /* To override browser (Chrome) default blue outline. */
+.h-product .product-price {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 24px;
 }
 
 .cymbal-button-primary {
-  background-color: #CE0631;
-  color: white;
-}
-
-.cymbal-button-primary:active,
-.cymbal-button-primary:focus,
-.cymbal-button-primary:hover {
-  border: solid 1px #7b031d;
-  background-color: #7b031d;
-  box-shadow: 0px 2px 2px 0px rgb(0 0 0 / 30%);
-}
-
-.cymbal-button-primary:active {
-  box-shadow: 0px 3px 6px 0px rgb(0 0 0 / 30%);
-}
-
-.cymbal-button-secondary {
-  background: none;
-  color: #CE0631;
-}
-
-.cymbal-button-secondary:active,
-.cymbal-button-secondary:focus,
-.cymbal-button-secondary:hover {
-  color: #7b031d;
-  border: solid 1px #7b031d;
-}
-
-.cymbal-button-secondary:active {
-  background-color: #f5ccd5;
-}
-
-.cymbal-form-field {
-  position: relative;
-  margin-top: 24px;
-}
-
-.cymbal-form-field label {
-  width: 100%;
-  margin: 0;
-  padding: 8px 16px 0 16px;
-  font-size: 12px;
-  line-height: 1.8em; /* Without this, there might be a 1px gap underneath. */
-  font-weight: normal;
-  border-radius: 4px 4px 0px 0px;
-  color: #5C6063;
-  background-color: white;
-}
-
-.cymbal-form-field input[type='email'],
-.cymbal-form-field input[type='password'],
-.cymbal-form-field select,
-.cymbal-form-field input[type='text'] {
-  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%) !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 14px 32px;
+  border-radius: var(--radius-sm);
   border: none;
-  border-bottom: 1px solid #9AA0A6;
-  padding: 0 16px 8px 16px;
-  outline: none;
-  color: #1E2021;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+  transition: all 0.2s ease;
+  font-size: 16px;
 }
 
-.cymbal-form-field .cymbal-dropdown-chevron {
-  position: absolute;
-  right: 25px;
-  width: 10px;
-  height: 5px;
+.cymbal-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55);
+  text-decoration: none;
+}
+
+/* Cart & Checkout Styling */
+.cart-sections {
+  background-color: var(--bg-main);
+  padding: 48px 0;
+}
+
+.cart-sections h3 {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 28px;
+}
+
+/* Recommendations */
+.recommendations {
+  background: #ffffff;
+  border-top: 1px solid var(--border-light);
+  padding: 60px 0;
+}
+
+.recommendations h2 {
+  font-size: 26px;
+  font-weight: 800;
+  border-top: none;
+  margin-bottom: 32px;
+}
+
+.recommendations img {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease;
+}
+
+.recommendations img:hover {
+  transform: scale(1.04);
+}
+
+/* Modern Footer */
+footer.py-5,
+.home-desktop-footer-row {
+  background: #0f172a !important;
+  color: #94a3b8;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 !important;
+}
+
+footer .footer-top {
+  background: transparent !important;
+  padding: 48px 24px 36px 24px;
+}
+
+footer .footer-text {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+footer .footer-text a {
+  color: #818cf8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+footer .footer-text a:hover {
+  text-decoration: underline;
+  color: #c7d2fe;
+}
+
+footer small {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #64748b;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Floating Quality Attributes Badge (Topic 01 Midterm Watermark) */
+body::after {
+  content: "🚀 Microservices Boutique | Scalability (Locust) & Security (RLS) Demo";
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #38bdf8;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  z-index: 9999;
+  letter-spacing: 0.3px;
+  pointer-events: none;
 }

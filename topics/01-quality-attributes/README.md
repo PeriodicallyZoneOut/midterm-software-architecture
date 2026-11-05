@@ -9,6 +9,13 @@
 
 [Slide outline](slides/outline.md) · [Speaker notes](slides/speaker-notes.md)
 
+## Tài liệu Hướng dẫn Setup & Kịch bản Live Demo (10 Phút)
+
+- 📄 [**Hướng dẫn Setup & Triển khai toàn bộ (HUONG-DAN-SETUP.md)**](HUONG-DAN-SETUP.md)
+- 🚀 [**Script tự động hóa 1-Click (setup-and-run.ps1)**](setup-and-run.ps1)
+- ⚡ [**Cheat Sheet Lệnh Demo 1 Trang (CHEAT-SHEET-CMD.md)**](CHEAT-SHEET-CMD.md)
+- 🎙️ [**Kịch bản Live Demo Vấn đáp chuẩn (KICH-BAN-DEMO-CHAT-LUONG.md)**](KICH-BAN-DEMO-CHAT-LUONG.md)
+
 ## Projects
 
 - [Online Boutique](projects/online-boutique/README.md): Locust workload; baseline/scaled runs; bottleneck và SLO.
